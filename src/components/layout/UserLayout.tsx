@@ -97,7 +97,7 @@ export default function UserLayout() {
       <div className="flex flex-col">
         {/* Desktop Navbar */}
 
-        <div className="w-full flex  items-center justify-between  border-b bg-white dark:bg-gray-950">
+        <div className="sticky top-0 w-full flex  items-center justify-between  border-b bg-white dark:bg-gray-950">
           <header className="w-full md:max-w-screen-lg lg:max-w-screen-2xl mx-auto flex h-full items-center justify-between  gap-2 md:gap-6  px-2 md:px-4 lg:px-6 ">
             {/* Desktop Navigation */}
 
