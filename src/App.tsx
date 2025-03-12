@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
 import AdminLayout from "./components/layout/AdminLayout";
 import Dashboard from "./pages/admin/dashboard/Dashboard";
 import ForgetPassword from "./pages/auth/ForgetPassword";
@@ -10,7 +10,7 @@ import UserLayout from "./components/layout/UserLayout";
 
 function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
         <Route path="/auth">
           <Route index element={<Navigate to="/auth/sign-in" replace />} />
@@ -32,7 +32,7 @@ function App() {
           <Route path="" element={<Dashboard />} />
         </Route>
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
