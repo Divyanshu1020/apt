@@ -2,5 +2,9 @@
     "routes": [
       { "src": "/(.*)", "dest": "/index.html" }
     ]
+<<<<<<< HEAD
   }
+=======
+}
+>>>>>>> 6c3823a119daacf47cad561d4a2f1151bb90a2ea
   
