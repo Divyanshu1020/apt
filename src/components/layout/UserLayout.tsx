@@ -33,7 +33,7 @@ const navigation = [
 ];
 
 export default function UserLayout() {
-  const [userIsLoggedIn, setUserIsLoggedIn] = useState(true);
+  const [userIsLoggedIn] = useState(true);
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();

@@ -6,7 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UserRole } from "@/types/user";
+import { UserRole } from "@/types/admin/user";
 
 interface UserFiltersProps {
   searchTerm: string;
@@ -51,11 +51,11 @@ export function UserFilters({
           <Button variant="outline" className="relative">
             <Filter className="mr-2 h-4 w-4" />
             Filters
-            {/* {(statusFilter || roleFilter) && (
+            {(statusFilter || roleFilter) && (
               <Badge className="absolute -right-2 -top-2 h-5 w-5 p-0 flex items-center justify-center">
                 {(statusFilter ? 1 : 0) + (roleFilter ? 1 : 0)}
               </Badge>
-            )} */}
+            )}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[220px] p-4">

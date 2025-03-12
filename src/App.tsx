@@ -6,7 +6,6 @@ import SignIn from "./pages/auth/SignIn";
 import SignUp from "./pages/auth/SignUp";
 import VerifyCode from "./pages/auth/VerifyCode";
 import Home from "./pages/website/home/Home";
-import { User } from "lucide-react";
 import UserLayout from "./components/layout/UserLayout";
 
 function App() {
