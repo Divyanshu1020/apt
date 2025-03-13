@@ -26,10 +26,10 @@ import SearchBox from "./components/SearchBox";
 import  Footer  from "./Footer";
 
 const navigation = [
-  {name: "Account", href: "/user/account", icon: User},
-  { name: "Orders", href: "/user/orders", icon: ShoppingCart},
-  { name: "Products", href: "/admin/products", icon: Store },
-  { name: "Services", href: "/admin/services", icon: Briefcase },
+  {name: "Account", href: "/account", icon: User},
+  { name: "Orders", href: "/orders", icon: ShoppingCart},
+  { name: "Products", href: "/products", icon: Store },
+  { name: "Services", href: "/services", icon: Briefcase },
 ];
 
 export default function UserLayout() {

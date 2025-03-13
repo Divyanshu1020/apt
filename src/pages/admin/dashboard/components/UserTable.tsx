@@ -27,7 +27,6 @@ export function UserTable({ users, onEditUser, onManageRoles, onToggleStatus }: 
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>ID</TableHead>
             <TableHead>Name</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Status</TableHead>
@@ -47,7 +46,6 @@ export function UserTable({ users, onEditUser, onManageRoles, onToggleStatus }: 
           ) : (
             users.map((user) => (
               <TableRow key={user.id}>
-                <TableCell className="font-medium">{user.id}</TableCell>
                 <TableCell>{user.name}</TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>

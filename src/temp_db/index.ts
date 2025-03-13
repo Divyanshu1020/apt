@@ -1,3 +1,4 @@
+import { Permission, Role } from "@/types/admin/role";
 import { User, UserRole } from "@/types/admin/user";
 
 
@@ -58,13 +59,51 @@ export const initialUsers: User[] = [
     registeredDate: "2023-02-28T15:40:00",
     updatedDate: "2023-02-28T15:40:00",
   },
-  {
-    id: "USR007",
-    name: "David Miller",
-    email: "david.m@example.com",
-    status: "active",
-    roles: ["Editor"],
-    registeredDate: "2023-03-15T10:20:00",
-    updatedDate: "2023-06-05T14:30:00",
-  },
 ];
+
+
+export const initialRoles: Role[] = [
+  {
+    id: "ROLE001",
+    name: "Admin",
+    description: "Full system access with all permissions",
+    permissions: ["read", "write", "delete", "manage_users", "manage_roles"],
+    usersCount: 2,
+  },
+  {
+    id: "ROLE002",
+    name: "Editor",
+    description: "Can edit content but cannot manage users or roles",
+    permissions: ["read", "write"],
+    usersCount: 3,
+  },
+  {
+    id: "ROLE003",
+    name: "Viewer",
+    description: "Read-only access to the system",
+    permissions: ["read"],
+    usersCount: 3,
+  },
+  {
+    id: "ROLE004",
+    name: "Manager",
+    description: "Can manage content and users but not roles",
+    permissions: ["read", "write", "delete", "manage_users"],
+    usersCount: 0,
+  },
+  {
+    id: "ROLE005",
+    name: "Support",
+    description: "Customer support access",
+    permissions: ["read", "write"],
+    usersCount: 0,
+  },
+]
+
+export const allPermissions: Permission[] = [
+  { id: "read", name: "Read Content" },
+  { id: "write", name: "Write Content" },
+  { id: "delete", name: "Delete Content" },
+  { id: "manage_users", name: "Manage Users" },
+  { id: "manage_roles", name: "Manage Roles" },
+]

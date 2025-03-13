@@ -11,14 +11,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { Briefcase, LogOut, Menu, Store, User } from "lucide-react";
+import { LogOut, Menu, Shield, User } from "lucide-react";
 import { useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import Logo from "../global/logo/Logo";
 
 const navigation = [
-  { name: "Products", href: "/admin/products", icon: Store },
-  { name: "Services", href: "/admin/services", icon: Briefcase },
+  { name: "Users", href: "/admin/dashboard", icon: User },
+  { name: "Roles", href: "/admin/roles", icon: Shield },
 ];
 
 export default function AdminLayout() {
@@ -92,7 +92,7 @@ export default function AdminLayout() {
                       className={cn(
                         "flex items-center gap-2 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50",
                         location.pathname === item.href &&
-                          "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-50"
+                          " text-gray-900"
                       )}
                       onClick={() => setOpen(false)}
                     >
@@ -165,7 +165,7 @@ export default function AdminLayout() {
           </header>
         </div>
 
-        <main className="flex-1 p-6 w-full min-h-screen md:max-w-screen-lg lg:max-w-screen-2xl mx-auto">
+        <main className="flex-1 p-6 w-full  md:max-w-screen-lg lg:max-w-screen-2xl mx-auto">
           <Outlet />
         </main>
       </div>
