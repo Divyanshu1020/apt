@@ -3,7 +3,6 @@ import { PlusCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { allRoles } from "@/temp_db";
 import { UserFilters } from "./components/UserFilters";
 import { UserTable } from "./components/UserTable";
 import { EditUserDialog } from "./components/EditUserDialog";
@@ -65,7 +64,7 @@ export default function Dashboard() {
     setIsRoleDialogOpen(false);
   };
 
-  const handleToggleStatus = (userId: string) => {
+  const handleToggleStatus = () => {
     // setUsers(
     //   users.map((user) =>
     //     user.id === userId

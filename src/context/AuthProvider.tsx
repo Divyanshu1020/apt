@@ -173,7 +173,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   
 
     },
-    onError: (error) => {
+    onError: () => {
       toast.error("Failed to get access token. Please try logging in again.");
       navigate("/auth/sign-in");
     }

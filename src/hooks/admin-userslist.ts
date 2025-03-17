@@ -148,13 +148,14 @@ export const useAdminUsersList = () => {
   
       const previousUsers = queryClient.getQueryData(["all-users-list"]);
   
-      queryClient.setQueryData(["all-users-list"], (oldData) => {
+      queryClient.setQueryData(["all-users-list"], (oldData: UsersResponse | undefined) => {
         if (oldData === null || oldData === undefined) {
           return { data: [] }; // or some other default value
         }
         return {
           ...oldData,
-          data: oldData.data.map((user) =>
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          data: oldData.data.map((user: any) =>
             user.id === id ? { ...user, ...userData } : user
           ),
         };
@@ -162,7 +163,7 @@ export const useAdminUsersList = () => {
   
       return { previousUsers };
     },
-    onError: (err, _, context) => {
+    onError: (_err, _, context) => {
       queryClient.setQueryData(["users"], context?.previousUsers);
     },
     onSettled: () => {
