@@ -10,13 +10,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User } from "@/types/admin/user";
+import { UserList } from "@/hooks/admin-userslist";
 
 interface EditUserDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  user: User | null;
-  onUserChange: (user: User) => void;
+  user: UserList | null;
+  onUserChange: (user: UserList) => void;
   onSave: () => void;
 }
 
@@ -65,8 +65,8 @@ export function EditUserDialog({ open, onOpenChange, user, onUserChange, onSave 
               Status
             </Label>
             <Select
-              value={user.status}
-              onValueChange={(value) => onUserChange({ ...user, status: value as 'active' | 'inactive' })}
+              value={user.enabled ? "active" : "inactive"}
+              onValueChange={(value) => onUserChange({ ...user, enabled: value === "active" })}
             >
               <SelectTrigger id="user-status" className="col-span-3">
                 <SelectValue />

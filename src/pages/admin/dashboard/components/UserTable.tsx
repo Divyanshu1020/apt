@@ -1,7 +1,5 @@
-import { format } from "date-fns";
-import { Check, MoreHorizontal, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,18 +8,31 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
-import { User } from "@/types/admin/user";
-
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { UserList } from "@/hooks/admin-userslist";
+import { format } from "date-fns";
+import { Check, MoreHorizontal, X } from "lucide-react";
 
 interface UserTableProps {
-  users: User[];
-  onEditUser: (user: User) => void;
-  onManageRoles: (user: User) => void;
+  users: UserList[];
+  onEditUser: (user: UserList) => void;
+  onManageRoles: (user: UserList) => void;
   onToggleStatus: (userId: string) => void;
 }
 
-export function UserTable({ users, onEditUser, onManageRoles, onToggleStatus }: UserTableProps) {
+export function UserTable({
+  users,
+  onEditUser,
+  onManageRoles,
+  onToggleStatus,
+}: UserTableProps) {
   return (
     <div className="rounded-md border">
       <Table>
@@ -49,26 +60,32 @@ export function UserTable({ users, onEditUser, onManageRoles, onToggleStatus }: 
                 <TableCell>{user.name}</TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>
-                  <Badge variant={user.status === "active" ? "default" : "secondary"}>
-                    {user.status === "active" ? (
+                  <Badge
+                    variant={user.enabled === true ? "default" : "secondary"}
+                  >
+                    {user.enabled === true ? (
                       <Check className="mr-1 h-3 w-3" />
                     ) : (
                       <X className="mr-1 h-3 w-3" />
                     )}
-                    {user.status}
+                    {user.enabled ? "Active" : "Inactive"}
                   </Badge>
                 </TableCell>
                 <TableCell>
                   <div className="flex flex-wrap gap-1">
-                    {user.roles.map((role) => (
-                      <Badge key={role} variant="outline">
-                        {role}
+                    {user.roles.map((role, index) => (
+                      <Badge key={index} variant="outline">
+                        {role.name}
                       </Badge>
                     ))}
                   </div>
                 </TableCell>
-                <TableCell>{format(new Date(user.registeredDate), "MMM d, yyyy")}</TableCell>
-                <TableCell>{format(new Date(user.updatedDate), "MMM d, yyyy")}</TableCell>
+                <TableCell>
+                  {format(new Date(user.createdAt), "MMM d, yyyy")}
+                </TableCell>
+                <TableCell>
+                  {format(new Date(user.updatedAt), "MMM d, yyyy")}
+                </TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -79,11 +96,16 @@ export function UserTable({ users, onEditUser, onManageRoles, onToggleStatus }: 
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem onClick={() => onEditUser(user)}>Edit user</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onManageRoles(user)}>Manage roles</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onEditUser(user)}>
+                        Edit user
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onManageRoles(user)}>
+                        Manage roles
+                      </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => onToggleStatus(user.id)}>
-                        {user.status === "active" ? "Deactivate" : "Activate"} user
+                      <DropdownMenuItem onClick={() => onToggleStatus(user.id.toString())}>
+                        {user.enabled === true ? "Deactivate" : "Activate"}{" "}
+                        user
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

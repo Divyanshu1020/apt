@@ -24,8 +24,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { Checkbox } from "@/components/ui/checkbox"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,56 +34,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { useAdminRolesList } from "@/hooks/admin-roleslist"
 
-// Sample data
-const initialRoles = [
-  {
-    id: "ROLE001",
-    name: "Admin",
-    description: "Full system access with all permissions",
-    permissions: ["read", "write", "delete", "manage_users", "manage_roles"],
-    usersCount: 2,
-  },
-  {
-    id: "ROLE002",
-    name: "Editor",
-    description: "Can edit content but cannot manage users or roles",
-    permissions: ["read", "write"],
-    usersCount: 3,
-  },
-  {
-    id: "ROLE003",
-    name: "Viewer",
-    description: "Read-only access to the system",
-    permissions: ["read"],
-    usersCount: 3,
-  },
-  {
-    id: "ROLE004",
-    name: "Manager",
-    description: "Can manage content and users but not roles",
-    permissions: ["read", "write", "delete", "manage_users"],
-    usersCount: 0,
-  },
-  {
-    id: "ROLE005",
-    name: "Support",
-    description: "Customer support access",
-    permissions: ["read", "write"],
-    usersCount: 0,
-  },
-]
 
-const allPermissions = [
-  { id: "read", name: "Read Content" },
-  { id: "write", name: "Write Content" },
-  { id: "delete", name: "Delete Content" },
-  { id: "manage_users", name: "Manage Users" },
-  { id: "manage_roles", name: "Manage Roles" },
-]
+
 
 export default function Roles() {
-  const [roles, setRoles] = useState(initialRoles)
+  const {roles, addRole, deleteRole} = useAdminRolesList();
   const [searchTerm, setSearchTerm] = useState("")
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
@@ -94,8 +49,6 @@ export default function Roles() {
   const [newRole, setNewRole] = useState({
     id: "",
     name: "",
-    description: "",
-    permissions: [] as string[],
     usersCount: 0,
   })
 
@@ -103,24 +56,11 @@ export default function Roles() {
   const filteredRoles = roles.filter(
     (role) =>
       searchTerm === "" ||
-      role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      role.description.toLowerCase().includes(searchTerm.toLowerCase()),
+      role.name.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   const handleAddRole = () => {
-    // Generate a new ID
-    const newId = `ROLE${String(roles.length + 1).padStart(3, "0")}`
-    const roleToAdd = { ...newRole, id: newId }
-    setRoles([...roles, roleToAdd])
-    setIsAddDialogOpen(false)
-    // Reset the form
-    setNewRole({
-      id: "",
-      name: "",
-      description: "",
-      permissions: [],
-      usersCount: 0,
-    })
+    addRole.mutate({ newRole : newRole.name })
   }
 
   const handleEditRole = (role: any) => {
@@ -129,7 +69,7 @@ export default function Roles() {
   }
 
   const handleSaveRole = () => {
-    setRoles(roles.map((role) => (role.id === editingRole.id ? editingRole : role)))
+    // setRoles(roles.map((role) => (role.id === editingRole.id ? editingRole : role)))
     setIsEditDialogOpen(false)
   }
 
@@ -139,27 +79,28 @@ export default function Roles() {
   }
 
   const confirmDeleteRole = () => {
-    setRoles(roles.filter((role) => role.id !== editingRole.id))
+    // setRoles(roles.filter((role) => role.id !== editingRole.id))
+    deleteRole.mutate({ roleId: editingRole.id })
     setIsDeleteDialogOpen(false)
   }
 
-  const togglePermission = (permission: string, target: "new" | "edit") => {
-    if (target === "new") {
-      setNewRole({
-        ...newRole,
-        permissions: newRole.permissions.includes(permission)
-          ? newRole.permissions.filter((p) => p !== permission)
-          : [...newRole.permissions, permission],
-      })
-    } else {
-      setEditingRole({
-        ...editingRole,
-        permissions: editingRole.permissions.includes(permission)
-          ? editingRole.permissions.filter((p: string) => p !== permission)
-          : [...editingRole.permissions, permission],
-      })
-    }
-  }
+  // const togglePermission = (permission: string, target: "new" | "edit") => {
+  //   if (target === "new") {
+  //     setNewRole({
+  //       ...newRole,
+  //       permissions: newRole.permissions.includes(permission)
+  //         ? newRole.permissions.filter((p) => p !== permission)
+  //         : [...newRole.permissions, permission],
+  //     })
+  //   } else {
+  //     setEditingRole({
+  //       ...editingRole,
+  //       permissions: editingRole.permissions.includes(permission)
+  //         ? editingRole.permissions.filter((p: string) => p !== permission)
+  //         : [...editingRole.permissions, permission],
+  //     })
+  //   }
+  // }
 
   return (
     <div className="space-y-6">
@@ -194,8 +135,8 @@ export default function Roles() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Permissions</TableHead>
+                  {/* <TableHead>Description</TableHead> */}
+                  {/* <TableHead>Permissions</TableHead> */}
                   <TableHead>Users</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -211,8 +152,8 @@ export default function Roles() {
                   filteredRoles.map((role) => (
                     <TableRow key={role.id}>
                       <TableCell className="font-medium">{role.name}</TableCell>
-                      <TableCell>{role.description}</TableCell>
-                      <TableCell>
+                      {/* <TableCell>{role.description}</TableCell> */}
+                      {/* <TableCell>
                         <div className="flex flex-wrap gap-1">
                           {role.permissions.map((permission) => (
                             <Badge key={permission} variant="outline">
@@ -220,8 +161,8 @@ export default function Roles() {
                             </Badge>
                           ))}
                         </div>
-                      </TableCell>
-                      <TableCell>{role.usersCount}</TableCell>
+                      </TableCell> */}
+                      <TableCell>{role.usersCount || 0}</TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -276,7 +217,7 @@ export default function Roles() {
                 onChange={(e) => setNewRole({ ...newRole, name: e.target.value })}
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
+            {/* <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="role-description" className="text-right">
                 Description
               </Label>
@@ -286,8 +227,8 @@ export default function Roles() {
                 className="col-span-3"
                 onChange={(e) => setNewRole({ ...newRole, description: e.target.value })}
               />
-            </div>
-            <div className="grid grid-cols-4 gap-4">
+            </div> */}
+            {/* <div className="grid grid-cols-4 gap-4">
               <Label className="text-right pt-2">Permissions</Label>
               <div className="col-span-3 space-y-3">
                 {allPermissions.map((permission) => (
@@ -301,7 +242,7 @@ export default function Roles() {
                   </div>
                 ))}
               </div>
-            </div>
+            </div> */}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
@@ -309,7 +250,11 @@ export default function Roles() {
             </Button>
             <Button
               onClick={handleAddRole}
-              disabled={!newRole.name || !newRole.description || newRole.permissions.length === 0}
+              disabled={
+                !newRole.name 
+                // || !newRole.description 
+                // || newRole.permissions.length === 0
+              }
             >
               Add Role
             </Button>
@@ -343,7 +288,7 @@ export default function Roles() {
                   onChange={(e) => setEditingRole({ ...editingRole, name: e.target.value })}
                 />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
+              {/* <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="edit-role-description" className="text-right">
                   Description
                 </Label>
@@ -353,8 +298,8 @@ export default function Roles() {
                   className="col-span-3"
                   onChange={(e) => setEditingRole({ ...editingRole, description: e.target.value })}
                 />
-              </div>
-              <div className="grid grid-cols-4 gap-4">
+              </div> */}
+              {/* <div className="grid grid-cols-4 gap-4">
                 <Label className="text-right pt-2">Permissions</Label>
                 <div className="col-span-3 space-y-3">
                   {allPermissions.map((permission) => (
@@ -368,7 +313,7 @@ export default function Roles() {
                     </div>
                   ))}
                 </div>
-              </div>
+              </div> */}
             </div>
           )}
           <DialogFooter>
@@ -377,7 +322,11 @@ export default function Roles() {
             </Button>
             <Button
               onClick={handleSaveRole}
-              disabled={!editingRole?.name || !editingRole?.description || editingRole?.permissions.length === 0}
+              disabled={
+                !editingRole?.name 
+                // || !editingRole?.description 
+                // || editingRole?.permissions.length === 0
+              }
             >
               Save Changes
             </Button>

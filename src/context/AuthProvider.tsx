@@ -1,9 +1,17 @@
-import { createContext, useContext, useCallback, useEffect, useState } from "react";
+import { SignUpData } from "@/pages/auth/SignUp";
 import { UseMutateFunction, useMutation, useQueryClient } from "@tanstack/react-query";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { SignUpData } from "@/pages/auth/SignUp";
 
+export interface User {
+  id: number;
+  email: string;
+  name: string;
+  password: string;
+  enabled: boolean;
+  roles: string[]; 
+}
 interface AuthContextValue {
     user: any;
     isAuthenticated: boolean;
@@ -14,7 +22,7 @@ interface AuthContextValue {
       error: Error | null;
     };
     signIn: {
-      mutate: UseMutateFunction<any, Error, void, unknown>;
+      mutate: UseMutateFunction<any, Error, { email: string; password: string }, unknown>;
       isLoading: boolean;
       error: Error | null;
     };
@@ -39,14 +47,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const checkAuthStatus = async () => {
       try {
         const storedUser = localStorage.getItem("user");
-        const storedToken = localStorage.getItem("token");
-        if (storedToken && storedUser) {
+        const accessToken = localStorage.getItem("access-token");
+        const refreshToken = localStorage.getItem("refresh-token");
+
+        if (accessToken && refreshToken && storedUser) {
           setUser(JSON.parse(storedUser));
         }
       } catch (error) {
         console.error("Auth status check failed:", error);
         localStorage.removeItem("user");
-        localStorage.removeItem("token");
+        localStorage.removeItem("access-token");
+        localStorage.removeItem("refresh-token");
       } finally {
         setIsLoading(false);
       }
@@ -69,7 +80,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       localStorage.setItem("user", JSON.stringify(data.user));
       setUser(data.user);
       toast.success("Account created successfully.");
-      navigate("/dashboard");
+      navigate("/");
     },
     onError: (error) => {
       toast.error(error.message || "Sign-up failed.");
@@ -77,8 +88,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   });
 
   const signIn = useMutation({
-    mutationFn: async (credentials) => {
-      const response = await fetch("/api/auth/signin", {
+    mutationFn: async (credentials: { email: string; password: string }) => {
+      const response = await fetch("/api/v1/login-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(credentials),
@@ -87,11 +98,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return response.json();
     },
     onSuccess: (data) => {
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem("temp-token", data.data.temp_token);
+      localStorage.setItem("user", JSON.stringify(data.data.user || "No data"));
       setUser(data.user);
+      // Call the renewAccessToken function after successful login
+      renewAccessToken.mutate({
+        refreshToken : data.data.temp_token
+      });
       toast.success("Signed in successfully.");
-      navigate("/dashboard");
     },
     onError: (error) => {
       toast.error(error.message || "Invalid credentials.");
@@ -125,6 +139,45 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   //     toast.error(error.message || "Password reset failed.");
   //   },
   // });
+
+  const renewAccessToken = useMutation({
+    mutationFn: async ({refreshToken}: {refreshToken: string}) => {
+      
+      if (!refreshToken) {
+        throw new Error("No refresh token found");
+      }
+      
+      const response = await fetch("/api/v1/renew-access-token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          // "Authorization": `Bearer ${refreshToken}`
+        },
+        body: JSON.stringify({
+          refreshToken : refreshToken
+        }),
+      });
+      
+      if (!response.ok) throw new Error("Failed to renew access token");
+      return response.json();
+    },
+    onSuccess: (data) => {
+      // Store the new access token
+      localStorage.setItem("access-token", data.data.accessToken);
+      localStorage.setItem("refresh-token", data.data.refreshToken);
+      localStorage.setItem("user", JSON.stringify(data.data.user));
+
+      setUser(data.data.user);
+
+      navigate("/");
+  
+
+    },
+    onError: (error) => {
+      toast.error("Failed to get access token. Please try logging in again.");
+      navigate("/auth/sign-in");
+    }
+  });
 
   const getToken = useCallback(() => localStorage.getItem("token"), []);
 

@@ -9,15 +9,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { User, UserRole } from "@/types/admin/user";
+import { Role } from "@/hooks/admin-roleslist";
+import { UserList } from "@/hooks/admin-userslist";
 
 interface ManageRolesDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  user: User | null;
-  onUserChange: (user: User) => void;
+  user: UserList | null;
+  onUserChange: (user: UserList) => void;
   onSave: () => void;
-  allRoles: UserRole[];
+  allRoles: Role[];
 }
 
 export function ManageRolesDialog({
@@ -30,12 +31,12 @@ export function ManageRolesDialog({
 }: ManageRolesDialogProps) {
   if (!user) return null;
 
-  const handleRoleToggle = (role: UserRole) => {
-    const updatedRoles = user.roles.includes(role)
-      ? user.roles.filter((r) => r !== role)
+  const handleRoleToggle = (role : Role) => {
+    const updatedRoles = user.roles.some(r => r.id === role.id)
+      ? user.roles.filter((r) => r.id !== role.id)
       : [...user.roles, role];
 
-    onUserChange({ ...user, roles: updatedRoles });
+    onUserChange({ ...user, roles: updatedRoles as Role[] });
   };
 
   return (
@@ -47,14 +48,14 @@ export function ManageRolesDialog({
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="space-y-4">
-            {allRoles.map((role) => (
-              <div key={role} className="flex items-center space-x-2">
+          {allRoles.map((role) => (
+              <div key={role.id} className="flex items-center space-x-2">
                 <Checkbox
-                  id={`role-${role}`}
-                  checked={user.roles.includes(role)}
+                  id={`role-${role.id}`}
+                  checked={user.roles.some(r => r.id === role.id)}
                   onCheckedChange={() => handleRoleToggle(role)}
                 />
-                <Label htmlFor={`role-${role}`}>{role}</Label>
+                <Label htmlFor={`role-${role.id}`}>{role.name}</Label>
               </div>
             ))}
           </div>

@@ -3,22 +3,29 @@ import { PlusCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { allRoles, initialUsers } from "@/temp_db";
-import { User } from "@/types/admin/user";
+import { allRoles } from "@/temp_db";
 import { UserFilters } from "./components/UserFilters";
 import { UserTable } from "./components/UserTable";
 import { EditUserDialog } from "./components/EditUserDialog";
 import { ManageRolesDialog } from "./components/ManageRolesDialog";
+import { useAdminUsersList, UserList } from "@/hooks/admin-userslist";
+import { useAdminRolesList } from "@/hooks/admin-roleslist";
 
 
 export default function Dashboard() {
-  const [users, setUsers] = useState(initialUsers);
+  const { users, isLoading, error, updateUser } = useAdminUsersList();
+  const {roles} = useAdminRolesList();
+
+  // const [users, setUsers] = useState(initialUsers);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [roleFilter, setRoleFilter] = useState<string | null>(null);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editingUser, setEditingUser] = useState<UserList | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
+
+  if (isLoading) return <p>Loading users...</p>;
+  if (error) return <p>Error: {error.message}</p>;
 
   // Filter users based on search term and filters
   const filteredUsers = users.filter((user) => {
@@ -26,44 +33,48 @@ export default function Dashboard() {
       searchTerm === "" ||
       user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.id.toLowerCase().includes(searchTerm.toLowerCase());
+      user.id.toString().toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesStatus = statusFilter === null || user.status === statusFilter;
-    const matchesRole = roleFilter === null || user.roles.includes(roleFilter as any);
+      const matchesStatus = statusFilter === null || (statusFilter === "active" ? user.enabled : !user.enabled);
+      const matchesRole = roleFilter === null || user.roles.some(role => role.name === roleFilter);
 
     return matchesSearch && matchesStatus && matchesRole;
   });
 
-  const handleEditUser = (user: User) => {
+  const handleEditUser = (user: UserList) => {
     setEditingUser({ ...user });
     setIsEditDialogOpen(true);
   };
 
   const handleSaveUser = () => {
     if (!editingUser) return;
-    setUsers(users.map((user) => (user.id === editingUser.id ? editingUser : user)));
+    // setUsers(users.map((user) => (user.id === editingUser.id ? editingUser : user)));
+    updateUser.mutate({ id: editingUser.id, userData: editingUser });
     setIsEditDialogOpen(false);
   };
 
-  const handleManageRoles = (user: User) => {
+  const handleManageRoles = (user: UserList) => {
     setEditingUser({ ...user });
     setIsRoleDialogOpen(true);
   };
 
   const handleSaveRoles = () => {
     if (!editingUser) return;
-    setUsers(users.map((user) => (user.id === editingUser.id ? editingUser : user)));
+    // setUsers(users.map((user) => (user.id === editingUser.id ? editingUser : user)));
+    updateUser.mutate({ id: editingUser.id, userData: editingUser });
     setIsRoleDialogOpen(false);
   };
 
   const handleToggleStatus = (userId: string) => {
-    setUsers(
-      users.map((user) =>
-        user.id === userId
-          ? { ...user, status: user.status === "active" ? "inactive" : "active" }
-          : user
-      )
-    );
+    // setUsers(
+    //   users.map((user) =>
+    //     user.id === userId
+    //       ? { ...user, status: user.status === "active" ? "inactive" : "active" }
+    //       : user
+    //   )
+    // );
+
+    
   };
 
   
@@ -91,7 +102,7 @@ export default function Dashboard() {
             setStatusFilter={setStatusFilter}
             roleFilter={roleFilter}
             setRoleFilter={setRoleFilter}
-            allRoles={allRoles}
+            allRoles={roles}
           />
         </CardHeader>
         <CardContent>
@@ -118,7 +129,7 @@ export default function Dashboard() {
         user={editingUser}
         onUserChange={setEditingUser}
         onSave={handleSaveRoles}
-        allRoles={allRoles}
+        allRoles={roles}
       />
     </div>
   );

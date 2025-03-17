@@ -12,5 +12,14 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
-  base: "/", 
+  base: "/",
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://16.171.14.210:8080',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  }
 });

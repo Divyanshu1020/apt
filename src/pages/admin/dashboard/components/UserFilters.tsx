@@ -6,7 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UserRole } from "@/types/admin/user";
+import { Role } from "@/hooks/admin-roleslist";
 
 interface UserFiltersProps {
   searchTerm: string;
@@ -15,7 +15,7 @@ interface UserFiltersProps {
   setStatusFilter: (status: string | null) => void;
   roleFilter: string | null;
   setRoleFilter: (role: string | null) => void;
-  allRoles: UserRole[];
+  allRoles: Role[];
 }
 
 export function UserFilters({
@@ -89,8 +89,8 @@ export function UserFilters({
                 <SelectContent>
                   <SelectItem value="any">Any role</SelectItem>
                   {allRoles.map((role) => (
-                    <SelectItem key={role} value={role}>
-                      {role}
+                    <SelectItem key={role.id} value={role.name}>
+                      {role.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
