@@ -13,7 +13,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { LogOut, Menu, Shield, User } from "lucide-react";
 import { useState } from "react";
-import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import Logo from "../global/logo/Logo";
 import { useAuth } from "@/context/AuthProvider";
 

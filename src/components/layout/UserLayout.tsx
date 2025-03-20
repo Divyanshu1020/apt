@@ -38,7 +38,7 @@ export default function UserLayout() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
 
     

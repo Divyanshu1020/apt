@@ -10,7 +10,7 @@ import SignUp from "./pages/auth/SignUp";
 import VerifyCode from "./pages/auth/VerifyCode";
 import Home from "./pages/website/home/Home";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { AdminRoute, UserRoute } from "./components/ProtectedRoute";
+import { AdminRoute } from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient({
   defaultOptions: {
