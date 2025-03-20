@@ -61,6 +61,7 @@ export default function Roles() {
 
   const handleAddRole = () => {
     addRole.mutate({ newRole : newRole.name })
+    setIsAddDialogOpen(false)
   }
 
   const handleEditRole = (role: any) => {
@@ -252,11 +253,13 @@ export default function Roles() {
               onClick={handleAddRole}
               disabled={
                 !newRole.name 
+                || addRole.isPending
                 // || !newRole.description 
                 // || newRole.permissions.length === 0
               }
             >
-              Add Role
+              
+              {addRole.isPending ? "Adding..." : "Add Role"}
             </Button>
           </DialogFooter>
         </DialogContent>

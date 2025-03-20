@@ -24,7 +24,7 @@ export default function SignIn() {
   const { signIn } = useAuth();
   const form = useForm({
     defaultValues: {
-      email: "jayanthsanathana@gmail.com",
+      email: "kulkarniachyut1@gmail.com",
       password: "1234",
     },
     mode: "onBlur",

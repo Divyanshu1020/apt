@@ -1,19 +1,18 @@
-import { useState } from "react";
 import { PlusCircle } from "lucide-react";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { UserFilters } from "./components/UserFilters";
-import { UserTable } from "./components/UserTable";
+import { useAdminRolesList } from "@/hooks/admin-roleslist";
+import { useAdminUsersList, UserList } from "@/hooks/admin-userslist";
 import { EditUserDialog } from "./components/EditUserDialog";
 import { ManageRolesDialog } from "./components/ManageRolesDialog";
-import { useAdminUsersList, UserList } from "@/hooks/admin-userslist";
-import { useAdminRolesList } from "@/hooks/admin-roleslist";
-
+import { UserFilters } from "./components/UserFilters";
+import { UserTable } from "./components/UserTable";
 
 export default function Dashboard() {
   const { users, isLoading, error, updateUser } = useAdminUsersList();
-  const {roles} = useAdminRolesList();
+  const { roles } = useAdminRolesList();
 
   // const [users, setUsers] = useState(initialUsers);
   const [searchTerm, setSearchTerm] = useState("");
@@ -34,8 +33,12 @@ export default function Dashboard() {
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.id.toString().toLowerCase().includes(searchTerm.toLowerCase());
 
-      const matchesStatus = statusFilter === null || (statusFilter === "active" ? user.enabled : !user.enabled);
-      const matchesRole = roleFilter === null || user.roles.some(role => role.name === roleFilter);
+    const matchesStatus =
+      statusFilter === null ||
+      (statusFilter === "active" ? user.enabled : !user.enabled);
+    const matchesRole =
+      roleFilter === null ||
+      user.roles.some((role) => role.name === roleFilter);
 
     return matchesSearch && matchesStatus && matchesRole;
   });
@@ -72,23 +75,17 @@ export default function Dashboard() {
     //       : user
     //   )
     // );
-
-    
   };
-
-  
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Users</h1>
-          <p className="text-muted-foreground">Manage user accounts and permissions</p>
+          <p className="text-muted-foreground">
+            Manage user accounts and permissions
+          </p>
         </div>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Add User
-        </Button>
       </div>
 
       <Card>

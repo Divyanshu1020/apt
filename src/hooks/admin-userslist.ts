@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthTokens } from "./authTokens";
+import { API_BASE_URL } from "@/constant";
 
 interface Role {
   id: number;
@@ -23,7 +24,7 @@ interface UsersResponse {
   // pageSize?: number;
 }
 
-const API_URL = "/api/v1/admin/users";
+const API_URL = `${API_BASE_URL}/v1/admin/users`;
 
 export const useAdminUsersList = () => {
   const queryClient = useQueryClient();
@@ -81,19 +82,9 @@ export const useAdminUsersList = () => {
   // ✅ Update User
   const updateUser = useMutation({
     mutationFn: async ({ id, userData }: { id: number; userData: any }) => {
-      const accessToken = localStorage.getItem("access-token");
 
-      const response = await fetch(`${API_URL}/${id}`, {
-        method: "PUT",
-        headers: { 
-          "Content-Type": "application/json", 
-          "Authorization": `Bearer ${accessToken}`
-        },
-        body: JSON.stringify(userData),
-      });
-      if (!response.ok) throw new Error("Failed to update user");
+  
       
-
 
 
 

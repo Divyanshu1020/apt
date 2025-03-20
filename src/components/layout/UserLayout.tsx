@@ -24,6 +24,7 @@ import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import Logo from "../global/logo/Logo";
 import SearchBox from "./components/SearchBox";
 import  Footer  from "./Footer";
+import { useAuth } from "@/context/AuthProvider";
 
 const navigation = [
   {name: "Account", href: "/account", icon: User},
@@ -33,10 +34,14 @@ const navigation = [
 ];
 
 export default function UserLayout() {
-  const [userIsLoggedIn] = useState(true);
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  const { user, isAuthenticated, isLoading } = useAuth();
+
+
+    
 
   const MobileNavContent = () => (
     <div className="flex flex-col gap-2 h-full pb-4">
@@ -46,7 +51,7 @@ export default function UserLayout() {
           "flex gap-1 flex-col px-2",
         )}
       >
-        {userIsLoggedIn && navigation.map((item) => {
+        {isAuthenticated && navigation.map((item) => {
           const Icon = item.icon;
           return (
             <Link
@@ -65,7 +70,7 @@ export default function UserLayout() {
           );
         })}
       </nav>
-      {userIsLoggedIn && (
+      {isAuthenticated && (
           <button
             onClick={() => {
               setOpen(false);
@@ -77,7 +82,7 @@ export default function UserLayout() {
             Sign out
           </button>
         )}
-        {!userIsLoggedIn && (
+        {!isAuthenticated && (
           <Button
             onClick={() => {
               setOpen(false);
@@ -110,7 +115,7 @@ export default function UserLayout() {
               <span className="text-[#7b7b7b] font-medium text-lg">Cart</span>
             </button>
 
-            {!userIsLoggedIn && (
+            {!isAuthenticated && (
               <>
                 <Button variant="text" className="hidden md:flex">
                   <span className="text-[#7b7b7b] font-medium text-lg">
@@ -125,7 +130,7 @@ export default function UserLayout() {
               </>
             )}
 
-            {userIsLoggedIn && (
+            {isAuthenticated && (
               <div className="hidden md:flex items-center gap-4">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -138,7 +143,7 @@ export default function UserLayout() {
                           src="https://github.com/shadcn.png"
                           alt="User avatar"
                         />
-                        <AvatarFallback>CN</AvatarFallback>
+                        <AvatarFallback>{user?.name.charAt(0)}</AvatarFallback>
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
@@ -146,10 +151,10 @@ export default function UserLayout() {
                     <DropdownMenuLabel className="font-normal">
                       <div className="flex flex-col space-y-1">
                         <p className="text-sm font-medium leading-none">
-                          John Doe
+                          {user?.name}
                         </p>
                         <p className="text-xs leading-none text-muted-foreground">
-                          john@example.com
+                          {user?.email}
                         </p>
                       </div>
                     </DropdownMenuLabel>

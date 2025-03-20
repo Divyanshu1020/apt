@@ -1,7 +1,11 @@
+import { API_BASE_URL } from "@/constant";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
+
 
 export function useAuthTokens() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const renewAccessToken = useMutation({
     mutationFn: async () => {
@@ -10,7 +14,7 @@ export function useAuthTokens() {
         throw new Error("No refresh token found");
       }
 
-      const response = await fetch("/api/v1/renew-access-token", {
+      const response = await fetch(`${API_BASE_URL}/v1/renew-access-token`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -21,7 +25,14 @@ export function useAuthTokens() {
         }),
       });
 
-      if (!response.ok) throw new Error("Failed to renew access token");
+      if (!response.ok) {
+        // remove user from local storage
+        localStorage.removeItem("user");
+        navigate("/auth/sign-in");
+
+        throw new Error("Failed to renew access token");
+      }
+
       return response.json();
     },
     onSuccess: (data) => {

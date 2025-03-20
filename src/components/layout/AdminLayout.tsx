@@ -15,6 +15,7 @@ import { LogOut, Menu, Shield, User } from "lucide-react";
 import { useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import Logo from "../global/logo/Logo";
+import { useAuth } from "@/context/AuthProvider";
 
 const navigation = [
   { name: "Users", href: "/admin/dashboard", icon: User },
@@ -22,8 +23,8 @@ const navigation = [
 ];
 
 export default function AdminLayout() {
+  const { user, signOut } = useAuth();
   const [open, setOpen] = useState(false);
-  const navigate = useNavigate();
   const location = useLocation();
 
   const MobileNavContent = ({ isMobile = false }) => (
@@ -57,7 +58,7 @@ export default function AdminLayout() {
           <button
             onClick={() => {
               setOpen(false);
-              navigate("/auth/sign-in");
+              signOut();
             }}
             className="flex items-center gap-2 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50"
           >
@@ -115,7 +116,7 @@ export default function AdminLayout() {
                         src="https://github.com/shadcn.png"
                         alt="User avatar"
                       />
-                      <AvatarFallback>CN</AvatarFallback>
+                      <AvatarFallback>{user?.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
@@ -123,10 +124,10 @@ export default function AdminLayout() {
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-medium leading-none">
-                        John Doe
+                        {user?.name}
                       </p>
                       <p className="text-xs leading-none text-muted-foreground">
-                        john@example.com
+                        {user?.email}
                       </p>
                     </div>
                   </DropdownMenuLabel>
@@ -138,7 +139,7 @@ export default function AdminLayout() {
                     </DropdownMenuItem>
                   </DropdownMenuGroup>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => signOut()}>
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Sign out</span>
                   </DropdownMenuItem>

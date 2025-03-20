@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "@/constant";
 import { SignUpData } from "@/pages/auth/SignUp";
 import { UseMutateFunction, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
@@ -37,6 +38,7 @@ interface AuthContextValue {
   
   export const AuthContext = createContext<AuthContextValue | null>(null);
 
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -52,7 +54,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         if (accessToken && refreshToken && storedUser) {
           setUser(JSON.parse(storedUser));
-        }
+        } 
       } catch (error) {
         console.error("Auth status check failed:", error);
         localStorage.removeItem("user");
@@ -67,7 +69,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signUp = useMutation<any, Error, SignUpData>({
     mutationFn: async (userData) => {
-      const response = await fetch("/api/v1/register", {
+      const response = await fetch(`${API_BASE_URL}/v1/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(userData),
@@ -89,7 +91,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signIn = useMutation({
     mutationFn: async (credentials: { email: string; password: string }) => {
-      const response = await fetch("/api/v1/login-password", {
+      const response = await fetch(`${API_BASE_URL}/v1/login-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(credentials),
@@ -147,7 +149,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         throw new Error("No refresh token found");
       }
       
-      const response = await fetch("/api/v1/renew-access-token", {
+      const response = await fetch(`${API_BASE_URL}/v1/renew-access-token`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
