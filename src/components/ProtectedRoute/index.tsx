@@ -1,4 +1,5 @@
 import { useAuth } from "@/context/AuthProvider";
+import { Role } from "@/hooks/admin-roleslist";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 
 
@@ -18,7 +19,7 @@ export const AuthGuard = ({ children }: { children?: React.ReactNode }) => {
   
   if (isAuthenticated) {
     // Check if the user has admin role
-    const isAdmin = user?.roles?.some(role => role.name === "ROLE_ADMIN");
+    const isAdmin = user?.roles?.some((role: Role) => role.name === "ROLE_ADMIN");
     
     const redirectTo = isAdmin ? "/admin/dashboard" : "/";
     
