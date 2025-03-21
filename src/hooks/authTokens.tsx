@@ -25,7 +25,7 @@ export function useAuthTokens() {
         }),
       });
 
-      if (!response.ok) {
+      if (!response.ok || response.status === 401 || response.status === 403) {
         // remove user from local storage
         localStorage.removeItem("user");
         navigate("/auth/sign-in");
@@ -45,6 +45,7 @@ export function useAuthTokens() {
      
     },
     onError: (error) => {
+      navigate("/auth/sign-in");
       console.error("Failed to renew access token:", error);
     },
   });

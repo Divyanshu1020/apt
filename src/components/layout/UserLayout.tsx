@@ -38,7 +38,7 @@ export default function UserLayout() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, signOut } = useAuth();
 
 
     
@@ -74,7 +74,7 @@ export default function UserLayout() {
           <button
             onClick={() => {
               setOpen(false);
-              navigate("/auth/sign-in");
+              signOut();
             }}
             className="mt-auto flex items-center gap-2 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50"
           >
@@ -117,12 +117,12 @@ export default function UserLayout() {
 
             {!isAuthenticated && (
               <>
-                <Button variant="text" className="hidden md:flex">
+                <Button onClick={() => navigate("/auth/sign-in")} variant="text" className="hidden md:flex">
                   <span className="text-[#7b7b7b] font-medium text-lg">
                     Sign in
                   </span>
                 </Button>
-                <Button variant="default" className="hidden md:flex bg-blue-600">
+                <Button onClick={() => navigate("/auth/sign-up")} variant="default" className="hidden md:flex bg-blue-600">
                   <span className="text-[#ffffff]  font-medium text-lg">
                     Sign up
                   </span>
@@ -166,7 +166,7 @@ export default function UserLayout() {
                       </DropdownMenuItem>
                     </DropdownMenuGroup>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => signOut()}>
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>Sign out</span>
                     </DropdownMenuItem>

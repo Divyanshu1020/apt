@@ -7,6 +7,27 @@ type ProtectedRouteProps = {
   children?: React.ReactNode;
 };
 
+export const AuthGuard = ({ children }: { children?: React.ReactNode }) => {
+  const { isAuthenticated, isLoading, user } = useAuth();
+  const location = useLocation();
+  
+  // Show loading while auth status is being determined
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+  
+  if (isAuthenticated) {
+    // Check if the user has admin role
+    const isAdmin = user?.roles?.some(role => role.name === "ROLE_ADMIN");
+    
+    const redirectTo = isAdmin ? "/admin/dashboard" : "/";
+    
+    return <Navigate to={redirectTo} state={{ from: location }} replace />;
+  }
+  
+  // User is not authenticated, allow access to auth pages
+  return children ? <>{children}</> : <Outlet />;
+};
 
 const ProtectedRoute = ({ allowedRoles = [], children }: ProtectedRouteProps) => {
   const location = useLocation();

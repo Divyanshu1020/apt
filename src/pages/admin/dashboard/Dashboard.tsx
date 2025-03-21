@@ -9,7 +9,7 @@ import { UserFilters } from "./components/UserFilters";
 import { UserTable } from "./components/UserTable";
 
 export default function Dashboard() {
-  const { users, isLoading, error, updateUser } = useAdminUsersList();
+  const { users, isLoading, error, addNewRolesInUser, removeRolesInUser, toggleUserStatus } = useAdminUsersList();
   const { roles } = useAdminRolesList();
 
   // const [users, setUsers] = useState(initialUsers);
@@ -17,6 +17,7 @@ export default function Dashboard() {
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [roleFilter, setRoleFilter] = useState<string | null>(null);
   const [editingUser, setEditingUser] = useState<UserList | null>(null);
+  const [beforeEditUser, setBeforeEditUser] = useState<UserList | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
 
@@ -49,23 +50,50 @@ export default function Dashboard() {
   const handleSaveUser = () => {
     if (!editingUser) return;
     // setUsers(users.map((user) => (user.id === editingUser.id ? editingUser : user)));
-    updateUser.mutate({ id: editingUser.id, userData: editingUser });
+    // updateUser.mutate({ id: editingUser.id, userData: editingUser });
+    toggleUserStatus.mutate({ id: editingUser.id });
     setIsEditDialogOpen(false);
   };
 
   const handleManageRoles = (user: UserList) => {
     setEditingUser({ ...user });
+    setBeforeEditUser({ ...user });
     setIsRoleDialogOpen(true);
   };
 
   const handleSaveRoles = () => {
     if (!editingUser) return;
-    // setUsers(users.map((user) => (user.id === editingUser.id ? editingUser : user)));
-    updateUser.mutate({ id: editingUser.id, userData: editingUser });
+
+  const removedRoles = beforeEditUser?.roles.filter(
+    (role) => !editingUser.roles.some((r) => r.id === role.id)
+  );
+
+  const addedRoles = editingUser.roles.filter(
+    (role) => !beforeEditUser?.roles.some((r) => r.id === role.id)
+  );
+
+
+    // Remove roles in one API call if needed
+    if ( removedRoles && removedRoles.length > 0) {
+       removeRolesInUser.mutate({
+        editingUser: editingUser,
+        roleIds: removedRoles,
+      });
+    }
+
+
+    // Add new roles in one API call if needed
+    if (addedRoles.length > 0) {
+       addNewRolesInUser.mutate({
+        editingUser: editingUser,
+        roleIds: addedRoles,
+      });
+    }
+
     setIsRoleDialogOpen(false);
   };
 
-  const handleToggleStatus = () => {
+  const handleToggleStatus = (userId: number) => {
     // setUsers(
     //   users.map((user) =>
     //     user.id === userId
@@ -73,6 +101,8 @@ export default function Dashboard() {
     //       : user
     //   )
     // );
+
+    toggleUserStatus.mutate({ id: userId });
   };
 
   return (

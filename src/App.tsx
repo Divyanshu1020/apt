@@ -10,7 +10,7 @@ import SignUp from "./pages/auth/SignUp";
 import VerifyCode from "./pages/auth/VerifyCode";
 import Home from "./pages/website/home/Home";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { AdminRoute } from "./components/ProtectedRoute";
+import { AdminRoute, AuthGuard } from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -27,12 +27,14 @@ function App() {
         <AuthProvider>
           <Routes>
             {/* Public Authentication Routes */}
-            <Route path="/auth">
-              <Route index element={<Navigate to="/auth/sign-in" replace />} />
-              <Route path="sign-in" element={<SignIn />} />
-              <Route path="sign-up" element={<SignUp />} />
-              <Route path="forget-password" element={<ForgetPassword />} />
-              <Route path="verify-code" element={<VerifyCode />} />
+            <Route element={<AuthGuard />}>
+              <Route path="/auth">
+                <Route index element={<Navigate to="/auth/sign-in" replace />} />
+                <Route path="sign-in" element={<SignIn />} />
+                <Route path="sign-up" element={<SignUp />} />
+                <Route path="forget-password" element={<ForgetPassword />} />
+                <Route path="verify-code" element={<VerifyCode />} />
+              </Route>
             </Route>
 
             {/* User Side */}

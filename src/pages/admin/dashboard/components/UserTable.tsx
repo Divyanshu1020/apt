@@ -24,7 +24,7 @@ interface UserTableProps {
   users: UserList[];
   onEditUser: (user: UserList) => void;
   onManageRoles: (user: UserList) => void;
-  onToggleStatus: (userId: string) => void;
+  onToggleStatus: (userId: number) => void;
 }
 
 export function UserTable({
@@ -103,7 +103,7 @@ export function UserTable({
                         Manage roles
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => onToggleStatus(user.id.toString())}>
+                      <DropdownMenuItem onClick={() => onToggleStatus(user.id)}>
                         {user.enabled === true ? "Deactivate" : "Activate"}{" "}
                         user
                       </DropdownMenuItem>

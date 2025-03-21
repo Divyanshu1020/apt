@@ -1,6 +1,11 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAuthTokens } from "./authTokens";
 import { API_BASE_URL } from "@/constant";
+import { CreateApiClient } from "@/service/api-client";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+const API_USERS_URL = `${API_BASE_URL}/v1/admin/users`;
+const API_ADD_ROLES_URL = `${API_BASE_URL}/v1/admin/add-multiple-role`;
+const API_REMOVE_ROLES_URL = `${API_BASE_URL}/v1/admin/remove-multiple-role`;
+const API_TOGGLE_USER_URL = `${API_BASE_URL}/v1/admin/users/enable/`;
 
 interface Role {
   id: number;
@@ -12,8 +17,8 @@ export interface UserList {
   email: string;
   name: string;
   enabled: boolean;
-  createdAt: string; 
-  updatedAt: string; 
+  createdAt: string;
+  updatedAt: string;
   roles: Role[];
 }
 
@@ -24,146 +29,169 @@ interface UsersResponse {
   // pageSize?: number;
 }
 
-const API_URL = `${API_BASE_URL}/v1/admin/users`;
-
 export const useAdminUsersList = () => {
   const queryClient = useQueryClient();
+  const { callApiWithAuth } = CreateApiClient();
 
-  const { renewAccessToken } = useAuthTokens();
-
-  // ✅ Fetch Users
+  // Fetch users
   const {
     data: usersResponse,
     isLoading,
     error,
   } = useQuery<UsersResponse, Error>({
     queryKey: ["all-users-list"],
-    queryFn: async () => {
-      // Try with current access token
-      try {
-        const accessToken = localStorage.getItem("access-token");
-        const response = await fetch(API_URL, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-        
-        if (response.status === 401 || response.status === 403) {
-          // Token might be expired, try to renew it
-          await renewAccessToken.mutateAsync();
-          
-          // Retry with new token
-          const newAccessToken = localStorage.getItem("access-token");
-          const retryResponse = await fetch(API_URL, {
-            headers: {
-              Authorization: `Bearer ${newAccessToken}`,
-            },
-          });
-          
-          if (!retryResponse.ok) {
-            throw new Error(`Failed to fetch users: ${retryResponse.status}`);
-          }
-          
-          return retryResponse.json();
-        }
-        
-        if (!response.ok) {
-          throw new Error(`Failed to fetch users: ${response.status}`);
-        }
-        
-        return response.json();
-      } catch (err) {
-        console.error("Error fetching users:", err);
-        throw err;
-      }
-    },
+    queryFn: () => callApiWithAuth<UsersResponse>({ url: API_USERS_URL }),
   });
 
-  // ✅ Update User
-  const updateUser = useMutation({
-    mutationFn: async ({ id, userData }: { id: number; userData: any }) => {
-
-  
-      
-
-
-
-      try {
-        const accessToken = localStorage.getItem("access-token");
-        const response = await fetch(`${API_URL}/${id}`, {
-          method: "PUT",
-          headers: { 
-            "Content-Type": "application/json", 
-            "Authorization": `Bearer ${accessToken}`
-          },
-          body: JSON.stringify(userData),
-        });
-        
-        if (response.status === 401 || response.status === 403) {
-          // Token might be expired, try to renew it
-          await renewAccessToken.mutateAsync();
-          
-          // Retry with new token
-          const newAccessToken = localStorage.getItem("access-token");
-          const retryResponse = await fetch(`${API_URL}/${id}`, {
-            method: "PUT",
-            headers: { 
-              "Content-Type": "application/json", 
-              "Authorization": `Bearer ${newAccessToken}`
-            },
-            body: JSON.stringify(userData),
-          });
-          
-          if (!retryResponse.ok) {
-            throw new Error(`Failed to update user: ${retryResponse.status}`);
-          }
-          
-          return retryResponse.json();
-        }
-        
-        if (!response.ok) {
-          throw new Error(`Failed to update user: ${response.status}`);
-        }
-        
-        return response.json();
-      } catch (err) {
-        console.error("Error fetching users:", err);
-        throw err;
-      }
-
-
-
-    },
-    onMutate: async ({ id, userData }) => {
-      await queryClient.cancelQueries({ queryKey: ["all-users-list"] });
-  
-      const previousUsers = queryClient.getQueryData(["all-users-list"]);
-  
-      queryClient.setQueryData(["all-users-list"], (oldData: UsersResponse | undefined) => {
-        if (oldData === null || oldData === undefined) {
-          return { data: [] }; // or some other default value
-        }
-        return {
-          ...oldData,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          data: oldData.data.map((user: any) =>
-            user.id === id ? { ...user, ...userData } : user
-          ),
-        };
+  // add new role in user
+  const addNewRolesInUser = useMutation({
+    mutationFn: async ({
+      editingUser,
+      roleIds,
+    }: {
+      editingUser: UserList;
+      roleIds: Role[];
+    }) => {
+      return callApiWithAuth<any>({
+        url: API_ADD_ROLES_URL,
+        method: "POST",
+        body: {
+          userId: editingUser.id,
+          roleIds: roleIds.map((r) => r.id),
+        },
       });
-  
+    },
+    onMutate: async ({
+      editingUser,
+    }: {
+      editingUser: UserList;
+    }) => {
+      await queryClient.cancelQueries({ queryKey: ["all-users-list"] });
+
+      const previousUsers = queryClient.getQueryData(["all-users-list"]);
+
+      queryClient.setQueryData(
+        ["all-users-list"],
+        (oldData: UsersResponse | undefined) => {
+          if (oldData === null || oldData === undefined) {
+            return { data: [] }; // or some other default value
+          }
+          return {
+            ...oldData,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            data: oldData.data.map((user: any) =>
+              user.id === editingUser.id ? { ...user, roles: editingUser.roles } : user
+            ),
+          };
+        }
+      );
+
       return { previousUsers };
     },
     onError: (_err, _, context) => {
       queryClient.setQueryData(["users"], context?.previousUsers);
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["all-users-list"] });
-    },
+    // onSettled: () => {
+    //   queryClient.invalidateQueries({ queryKey: ["all-users-list"] });
+    // },
   });
-  
 
+  // remove role in user
+  const removeRolesInUser = useMutation({
+    mutationFn: async ({
+      editingUser,
+      roleIds,
+    }: {
+      editingUser: UserList;
+      roleIds: Role[];
+    }) => {
+      return callApiWithAuth<any>({
+        url: API_REMOVE_ROLES_URL,
+        method: "DELETE",
+        body: {
+          userId : editingUser.id,
+          roleIds: roleIds.map((r) => r.id),
+        },
+      });
+    },
+    onMutate: async ({
+      editingUser,
+    }: {
+      editingUser: UserList;
+    }) => {
+      await queryClient.cancelQueries({ queryKey: ["all-users-list"] });
+
+      const previousUsers = queryClient.getQueryData(["all-users-list"]);
+
+      queryClient.setQueryData(
+        ["all-users-list"],
+        (oldData: UsersResponse | undefined) => {
+          if (oldData === null || oldData === undefined) {
+            return { data: [] }; // or some other default value
+          }
+          return {
+            ...oldData,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            data: oldData.data.map((user: any) =>
+              user.id === editingUser.id ? { ...user, roles: editingUser.roles } : user
+            ),
+          };
+        }
+      );
+
+      return { previousUsers };
+    },
+    onError: (_err, _, context) => {
+      queryClient.setQueryData(["all-users-list"], context?.previousUsers);
+    },
+    // onSettled: () => {
+    //   queryClient.invalidateQueries({ queryKey: ["all-users-list"] });
+    // },
+  });
+
+  const toggleUserStatus = useMutation({
+    mutationFn: async ({
+    
+      id,
+    }:   { id: number },) => {
+      return callApiWithAuth<any>({
+        url: API_TOGGLE_USER_URL + id,
+        method: "PUT",
+      });
+    },
+    onMutate: async ({
+      id,
+    }: { id: number }) => {
+      await queryClient.cancelQueries({ queryKey: ["all-users-list"] });
+
+      const previousUsers = queryClient.getQueryData(["all-users-list"]);
+
+      queryClient.setQueryData(
+        ["all-users-list"],
+        (oldData: UsersResponse | undefined) => {
+          if (oldData === null || oldData === undefined) {
+            return { data: [] }; // or some other default value
+          }
+          return {
+            ...oldData,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            data: oldData.data.map((user: any) =>
+              user.id === id ? { ...user, enabled: !user.enabled } : user
+            ),
+          };
+        }
+      );
+
+      return { previousUsers };
+    },
+    onError: (_err, _, context) => {
+      queryClient.setQueryData(["all-users-list"], context?.previousUsers);
+    },
+    // onSettled: () => {
+    //   queryClient.invalidateQueries({ queryKey: ["all-users-list"] });
+    // },
+  });
 
   const users = usersResponse?.data || [];
-  return { users, isLoading, error, updateUser };
+  return { users, isLoading, error, addNewRolesInUser, removeRolesInUser, toggleUserStatus };
 };
