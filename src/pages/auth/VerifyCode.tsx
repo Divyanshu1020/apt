@@ -1,41 +1,118 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { Link } from "react-router-dom";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
+import { useAuth } from "@/context/AuthProvider";
+import { useForm } from "react-hook-form";
+import { Link, useSearchParams } from "react-router-dom";
+import { Loader2 } from "lucide-react"; // Import loader icon
 
 export default function VerifyCode() {
+  const { verifyCode, requestPasswordReset } = useAuth();
+  const [searchParams] = useSearchParams();
+  const email = searchParams.get("email") || "";
+  const form = useForm({
+    defaultValues: {
+      otp: "",
+    },
+    mode: "onSubmit",
+  });
+
+  const onSubmit = (data: { otp: string }) => {
+    if (data.otp.length < 6) {
+      form.setError("otp", {
+        type: "manual",
+        message: "Code should be 6 characters long",
+      });
+      return;
+    }
+  
+    verifyCode.mutate({ otp: data.otp, email });
+  };
+
+  const resend = () => {
+    requestPasswordReset.mutate({ email: email });
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <Card className="w-[400px]">
-        <CardHeader>
-          <CardTitle>Verify Code</CardTitle>
-          <CardDescription>Enter the verification code sent to your email</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex justify-center">
-            <InputOTP maxLength={6}>
-              <InputOTPGroup>
-                <InputOTPSlot index={0} />
-                <InputOTPSlot index={1} />
-                <InputOTPSlot index={2} />
-                <InputOTPSlot index={3} />
-                <InputOTPSlot index={4} />
-                <InputOTPSlot index={5} />
-              </InputOTPGroup>
-            </InputOTP>
-          </div>
-        </CardContent>
-        <CardFooter className="flex flex-col space-y-4">
-          <Button className="w-full">Verify Code</Button>
-          <p className="text-sm text-gray-600">
-            Didn't receive a code?{" "}
-            <button className="text-primary hover:underline">Resend</button>
-          </p>
-          <Link to="/auth/sign-in" className="text-sm text-primary hover:underline">
-            Back to Sign In
-          </Link>
-        </CardFooter>
-      </Card>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <Card className="w-[400px]">
+            <CardHeader>
+              <CardTitle>Verify Code</CardTitle>
+              <CardDescription>
+                Enter the verification code sent to your email
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex justify-center">
+                <FormField
+                  control={form.control}
+                  name="otp"
+                  rules={{ required: "Code is required" }}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <InputOTP maxLength={6} {...field}>
+                          <InputOTPGroup>
+                            {[...Array(6)].map((_, index) => (
+                              <InputOTPSlot key={index} index={index} />
+                            ))}
+                          </InputOTPGroup>
+                        </InputOTP>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </CardContent>
+            <CardFooter className="flex flex-col space-y-4">
+              <Button
+                type="submit"
+                className="w-full flex items-center justify-center"
+                disabled={verifyCode.isLoading} // Disable button while loading
+              >
+                {verifyCode.isLoading ? (
+                  <>
+                    <Loader2 className="animate-spin mr-2" size={18} /> Verifying...
+                  </>
+                ) : (
+                  "Verify Code"
+                )}
+              </Button>
+              <p className="text-sm text-gray-600">
+                Didn't receive a code?{" "}
+                <button
+                  className="text-primary hover:underline"
+                  disabled={verifyCode.isLoading || requestPasswordReset.isLoading} // Disable while loading
+                  onClick={resend}
+                >
+                  {requestPasswordReset.isLoading ? "Sending"  : "Resend"}
+                </button>
+              </p>
+              <Link
+                to="/auth/sign-in"
+                className="text-sm text-primary hover:underline"
+              >
+                Back to Sign In
+              </Link>
+            </CardFooter>
+          </Card>
+        </form>
+      </Form>
     </div>
   );
 }

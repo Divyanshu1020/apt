@@ -70,7 +70,8 @@ export default function UserLayout() {
           );
         })}
       </nav>
-      {isAuthenticated && (
+      {
+      isAuthenticated && (
           <button
             onClick={() => {
               setOpen(false);
@@ -88,9 +89,20 @@ export default function UserLayout() {
               setOpen(false);
               navigate("/auth/sign-in");
             }}
+            variant={"outline"}
             className=" mt-auto flex items-center gap-2 rounded-lg px-3 py-2  transition-all "
           >
-            <User className="h-4 w-4" />
+            Sign up
+          </Button>
+        )}
+        {!isAuthenticated && (
+          <Button
+            onClick={() => {
+              setOpen(false);
+              navigate("/auth/sign-in");
+            }}
+            className=" flex items-center gap-2 rounded-lg px-3 py-2  transition-all "
+          >
             Sign in
           </Button>
         )}
