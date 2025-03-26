@@ -43,6 +43,7 @@ export const useAdminUsersList = () => {
   } = useQuery<UsersResponse, Error>({
     queryKey: ["all-users-list"],
     retry: false, 
+    
     queryFn: () =>
       callApiWithAuth<UsersResponse>({ url: API_USERS_URL }),
   },

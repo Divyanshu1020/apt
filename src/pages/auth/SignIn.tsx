@@ -17,12 +17,15 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/context/AuthProvider";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { Link } from "react-router-dom";
+import { useState } from "react";
 
 export default function SignIn() {
   const { signIn } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
+
   const form = useForm({
     defaultValues: {
       email: "",
@@ -33,6 +36,10 @@ export default function SignIn() {
 
   const onSubmit = (data: { email: string; password: string }) => {
     signIn.mutate(data);
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   return (
@@ -85,11 +92,26 @@ export default function SignIn() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input
-                        type="password"
-                        placeholder="Enter your password"
-                        {...field}
-                      />
+                      <div className="relative">
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Enter your password"
+                          {...field}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-1 top-1/2 -translate-y-1/2"
+                          onClick={togglePasswordVisibility}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4 text-gray-500" />
+                          ) : (
+                            <Eye className="h-4 w-4 text-gray-500" />
+                          )}
+                        </Button>
+                      </div>
                     </FormControl>
                     <FormMessage>{fieldState.error?.message}</FormMessage>
                   </FormItem>
@@ -101,7 +123,11 @@ export default function SignIn() {
               >
                 Forgot password?
               </Link>
-              <Button type="submit" className="w-full" disabled={signIn.isLoading}>
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={signIn.isLoading}
+              >
                 {signIn.isLoading ? (
                   <>
                     <Loader2 className="animate-spin mr-2" size={18} />{" "}
@@ -110,7 +136,6 @@ export default function SignIn() {
                 ) : (
                   "Sign In"
                 )}
-                
               </Button>
             </form>
           </Form>

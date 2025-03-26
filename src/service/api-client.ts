@@ -11,6 +11,8 @@ type ApiOptions = {
 
 export const CreateApiClient = (navigate?: (value: string) => void) => {
   const { renewAccessToken } = useAuthTokens(navigate);
+  let isRefreshing = false;
+  let refreshTokenPromise: Promise<void> | null = null;
 
   const callApiWithAuth = async <T>({
     url,
@@ -34,36 +36,54 @@ export const CreateApiClient = (navigate?: (value: string) => void) => {
       return options;
     };
 
-    try {
-      let accessToken = localStorage.getItem("access-token") || "";
-      let response = await fetch(url, createRequestOptions(accessToken));
-
-      if (response.status === 401 || response.status === 403) {
-        try {
-          await renewAccessToken.mutateAsync();
-          accessToken = localStorage.getItem("access-token") || "";
-
-          response = await fetch(url, createRequestOptions(accessToken));
-
-          if (!response.ok) {
-            const errorData = await response.text();
-            throw new Error(`API Error (${response.status}): ${errorData || response.statusText}`);
-          }
-        } catch (err) {
-          console.error("Failed to renew access token:", err);
-          if (navigate) {
-            navigate("/auth/sign-in");
-          }
-          return Promise.reject(new Error("Authentication failed, please sign in again."));
-        }
-      }
-
+    const performRequest = async (token: string) => {
+      const response = await fetch(url, createRequestOptions(token));
+      
       if (!response.ok) {
         const errorData = await response.text();
         throw new Error(`API Error (${response.status}): ${errorData || response.statusText}`);
       }
 
       return response.json();
+    };
+
+    try {
+      let accessToken = localStorage.getItem("access-token") || "";
+      
+      try {
+        return await performRequest(accessToken);
+      } catch (error: any) {
+        // Check if the error is due to unauthorized access
+        if (error.message.includes('401') || error.message.includes('403')) {
+          // Ensure only one token refresh happens
+          if (!isRefreshing) {
+            isRefreshing = true;
+            refreshTokenPromise = renewAccessToken.mutateAsync()
+              .then(() => {
+                accessToken = localStorage.getItem("access-token") || "";
+              })
+              .catch((err) => {
+                console.error("Failed to renew access token:", err);
+                if (navigate) {
+                  navigate("/auth/sign-in");
+                }
+                throw new Error("Authentication failed, please sign in again.");
+              })
+              .finally(() => {
+                isRefreshing = false;
+              });
+          }
+
+          // Wait for the token refresh to complete
+          await refreshTokenPromise;
+
+          // Retry the original request
+          return await performRequest(accessToken);
+        }
+
+        // If it's not an authorization error, rethrow
+        throw error;
+      }
     } catch (err) {
       console.error("API Request Error:", err);
       if (navigate) {

@@ -39,8 +39,7 @@ export function useAuthTokens(navigate?: (value: string) => void) {
       // Invalidate queries that depend on authentication
       queryClient.invalidateQueries({ queryKey: ["auth"] });
     },
-    onError: (error) => {
-      console.error("Token renewal error:", error);
+    onError: () => {
       toast.error("Session expired. Please sign in again.");
 
       localStorage.removeItem("user");
