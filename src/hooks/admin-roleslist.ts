@@ -2,6 +2,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuthTokens } from "./authTokens";
 import { API_BASE_URL } from "@/constant";
+import { useNavigate } from "react-router-dom";
+import { CreateApiClient } from "@/service/api-client";
+import { useMemo } from "react";
 
 export interface Role {
   usersCount: number;
@@ -18,6 +21,9 @@ export const useAdminRolesList = () => {
   const queryClient = useQueryClient();
   const { renewAccessToken } = useAuthTokens();
 
+  const navigate = useNavigate(); 
+  const { callApiWithAuth } = CreateApiClient(navigate);
+
   // ✅ Fetch Users
   const {
     data: rolesResponse,
@@ -25,45 +31,56 @@ export const useAdminRolesList = () => {
     error,
   } = useQuery<RolesResponse, Error>({
     queryKey: ["all-roles-list"],
+    retry: false, 
+    // queryFn: async () => {
+    //   // Try with current access token
+    //   try {
+    //     const accessToken = localStorage.getItem("access-token");
+    //     const response = await fetch(API_URL, {
+    //       headers: {
+    //         Authorization: `Bearer ${accessToken}`,
+    //       },
+    //     });
 
-    queryFn: async () => {
-      // Try with current access token
-      try {
-        const accessToken = localStorage.getItem("access-token");
-        const response = await fetch(API_URL, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
+    //     if (response.status === 401 || response.status === 403) {
+    //       // Token might be expired, try to renew it
+    //       try {
+    //         await renewAccessToken.mutateAsync();
+    //       } catch (err) {
+    //         console.log(err);
+    //         navigate("/auth/sign-in");
+    //       }
 
-        if (response.status === 401 || response.status === 403) {
-          // Token might be expired, try to renew it
-          await renewAccessToken.mutateAsync();
+    //       // Retry with new token
+    //       const newAccessToken = localStorage.getItem("access-token");
+    //       const retryResponse = await fetch(API_URL, {
+    //         headers: {
+    //           Authorization: `Bearer ${newAccessToken}`,
+    //         },
+    //       });
 
-          // Retry with new token
-          const newAccessToken = localStorage.getItem("access-token");
-          const retryResponse = await fetch(API_URL, {
-            headers: {
-              Authorization: `Bearer ${newAccessToken}`,
-            },
-          });
+    //       if (!retryResponse.ok) {
+    //         navigate("/auth/sign-in");
 
-          if (!retryResponse.ok) {
-            throw new Error(`Failed to fetch role: ${retryResponse.status}`);
-          }
+    //         throw new Error(`Failed to fetch role: ${retryResponse.status}`);
+    //       }
 
-          return retryResponse.json();
-        }
+    //       return retryResponse.json();
+    //     }
 
-        if (!response.ok) {
-          throw new Error(`Failed to fetch role: ${response.status}`);
-        }
-        return response.json();
-      } catch (err) {
-        console.error("Error fetching role:", err);
-        throw err;
-      }
-    },
+    //     if (!response.ok) {
+    //       throw new Error(`Failed to fetch role: ${response.status}`);
+    //     }
+    //     return response.json();
+    //   } catch (err) {
+    //     navigate("/auth/sign-in");
+    //     throw err;
+    //   }
+    // },
+
+    queryFn: () =>
+      callApiWithAuth<RolesResponse>({ url: API_URL }),
+  
   });
 
   // ✅ Add Role
@@ -82,7 +99,13 @@ export const useAdminRolesList = () => {
 
         if (response.status === 401 || response.status === 403) {
           // Token might be expired, try to renew it
-          await renewAccessToken.mutateAsync();
+          try {
+            await renewAccessToken.mutateAsync();
+          } catch (err) {
+            console.error("Failed to renew access token:", err);
+            navigate("/auth/sign-in");
+            return Promise.reject(new Error("Failed to renew access token")); // ✅ Stop execution
+          }
 
           // Retry with new token
           const newAccessToken = localStorage.getItem("access-token");

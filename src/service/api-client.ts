@@ -1,6 +1,7 @@
 import { useAuthTokens } from "@/hooks/authTokens";
 
 type ApiMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
+
 type ApiOptions = {
   url: string;
   method?: ApiMethod;
@@ -8,57 +9,66 @@ type ApiOptions = {
   contentType?: string;
 };
 
-export const CreateApiClient = () => {
-  const { renewAccessToken } = useAuthTokens();
+export const CreateApiClient = (navigate?: (value: string) => void) => {
+  const { renewAccessToken } = useAuthTokens(navigate);
 
   const callApiWithAuth = async <T>({
     url,
     method = "GET",
     body,
-    contentType = "application/json"
+    contentType = "application/json",
   }: ApiOptions): Promise<T> => {
     const createRequestOptions = (token: string) => {
       const options: RequestInit = {
         method,
         headers: {
           Authorization: `Bearer ${token}`,
-          ...(contentType && { "Content-Type": contentType })
-        }
+          ...(contentType && { "Content-Type": contentType }),
+        },
       };
-      
+
       if (body) {
         options.body = contentType === "application/json" ? JSON.stringify(body) : body;
       }
-      
+
       return options;
     };
 
     try {
-      const accessToken = localStorage.getItem("access-token") || "";
-      const response = await fetch(url, createRequestOptions(accessToken));
+      let accessToken = localStorage.getItem("access-token") || "";
+      let response = await fetch(url, createRequestOptions(accessToken));
 
       if (response.status === 401 || response.status === 403) {
-        await renewAccessToken.mutateAsync();
-        const newAccessToken = localStorage.getItem("access-token") || "";
-        
-        const retryResponse = await fetch(url, createRequestOptions(newAccessToken));
-        
-        if (!retryResponse.ok) {
-          const errorData = await retryResponse.text();
-          throw new Error(`API Error (${retryResponse.status}): ${errorData || retryResponse.statusText}`);
+        try {
+          await renewAccessToken.mutateAsync();
+          accessToken = localStorage.getItem("access-token") || "";
+
+          response = await fetch(url, createRequestOptions(accessToken));
+
+          if (!response.ok) {
+            const errorData = await response.text();
+            throw new Error(`API Error (${response.status}): ${errorData || response.statusText}`);
+          }
+        } catch (err) {
+          console.error("Failed to renew access token:", err);
+          if (navigate) {
+            navigate("/auth/sign-in");
+          }
+          return Promise.reject(new Error("Authentication failed, please sign in again."));
         }
-        
-        return retryResponse.json();
       }
 
       if (!response.ok) {
         const errorData = await response.text();
         throw new Error(`API Error (${response.status}): ${errorData || response.statusText}`);
       }
-      
+
       return response.json();
     } catch (err) {
-      console.error(`Error calling API ${method} ${url}:`, err);
+      console.error("API Request Error:", err);
+      if (navigate) {
+        navigate("/auth/sign-in");
+      }
       throw err;
     }
   };

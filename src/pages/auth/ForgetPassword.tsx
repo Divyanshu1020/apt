@@ -16,12 +16,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useAuth } from "@/context/AuthProvider";
 import { useForm } from "react-hook-form";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function ForgetPassword() {
-  const { requestPasswordReset } = useAuth();
+  // const { requestPasswordReset } = useAuth();
   const form = useForm({
     defaultValues: {
       email: "",
@@ -29,8 +28,11 @@ export default function ForgetPassword() {
     mode: "onSubmit",
   });
 
+  const navigate = useNavigate();
+
   const onSubmit = (data: { email: string }) => {
-    requestPasswordReset.mutate({ email: data.email });
+    // requestPasswordReset.mutate({ email: data.email });
+    navigate("/auth/verify-code?email=" + data.email);
   };
 
   return (
@@ -74,33 +76,9 @@ export default function ForgetPassword() {
                 <Button
                   type="submit"
                   className="w-full"
-                  disabled={requestPasswordReset.isLoading}
+                  // disabled={requestPasswordReset.isLoading}
                 >
-                  {requestPasswordReset.isLoading ? (
-                    <div className="flex items-center justify-center">
-                      <svg
-                        className="animate-spin h-5 w-5 mr-2 text-white"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8v8H4z"
-                        ></path>
-                      </svg>
-                      Sending...
-                    </div>
-                  ) : (
-                    "Send OTP"
-                  )}
+                  Next
                 </Button>
                 <p className="text-sm text-gray-600">
                   Remember your password?{" "}

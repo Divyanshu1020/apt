@@ -19,7 +19,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { Loader2 } from "lucide-react"; // Import loader icon
 
 export default function VerifyCode() {
-  const { verifyCode, requestPasswordReset } = useAuth();
+  const { verifyCode } = useAuth();
   const [searchParams] = useSearchParams();
   const email = searchParams.get("email") || "";
   const form = useForm({
@@ -41,9 +41,9 @@ export default function VerifyCode() {
     verifyCode.mutate({ otp: data.otp, email });
   };
 
-  const resend = () => {
-    requestPasswordReset.mutate({ email: email });
-  };
+  // const resend = () => {
+  //   requestPasswordReset.mutate({ email: email });
+  // };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -53,7 +53,7 @@ export default function VerifyCode() {
             <CardHeader>
               <CardTitle>Verify Code</CardTitle>
               <CardDescription>
-                Enter the verification code sent to your email
+                Enter the verification code sent to your mobile app
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -93,7 +93,7 @@ export default function VerifyCode() {
                   "Verify Code"
                 )}
               </Button>
-              <p className="text-sm text-gray-600">
+              {/* <p className="text-sm text-gray-600">
                 Didn't receive a code?{" "}
                 <button
                   className="text-primary hover:underline"
@@ -102,7 +102,7 @@ export default function VerifyCode() {
                 >
                   {requestPasswordReset.isLoading ? "Sending"  : "Resend"}
                 </button>
-              </p>
+              </p> */}
               <Link
                 to="/auth/sign-in"
                 className="text-sm text-primary hover:underline"

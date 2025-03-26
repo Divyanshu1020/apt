@@ -1,6 +1,7 @@
 import { API_BASE_URL } from "@/constant";
 import { CreateApiClient } from "@/service/api-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 
 const API_USERS_URL = `${API_BASE_URL}/v1/admin/users`;
 const API_ADD_ROLES_URL = `${API_BASE_URL}/v1/admin/add-multiple-role`;
@@ -31,7 +32,8 @@ interface UsersResponse {
 
 export const useAdminUsersList = () => {
   const queryClient = useQueryClient();
-  const { callApiWithAuth } = CreateApiClient();
+  const navigate = useNavigate();
+  const { callApiWithAuth } = CreateApiClient(navigate)
 
   // Fetch users
   const {
@@ -40,8 +42,12 @@ export const useAdminUsersList = () => {
     error,
   } = useQuery<UsersResponse, Error>({
     queryKey: ["all-users-list"],
-    queryFn: () => callApiWithAuth<UsersResponse>({ url: API_USERS_URL }),
-  });
+    retry: false, 
+    queryFn: () =>
+      callApiWithAuth<UsersResponse>({ url: API_USERS_URL }),
+  },
+
+);
 
   // add new role in user
   const addNewRolesInUser = useMutation({
@@ -61,11 +67,7 @@ export const useAdminUsersList = () => {
         },
       });
     },
-    onMutate: async ({
-      editingUser,
-    }: {
-      editingUser: UserList;
-    }) => {
+    onMutate: async ({ editingUser }: { editingUser: UserList }) => {
       await queryClient.cancelQueries({ queryKey: ["all-users-list"] });
 
       const previousUsers = queryClient.getQueryData(["all-users-list"]);
@@ -80,7 +82,9 @@ export const useAdminUsersList = () => {
             ...oldData,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             data: oldData.data.map((user: any) =>
-              user.id === editingUser.id ? { ...user, roles: editingUser.roles } : user
+              user.id === editingUser.id
+                ? { ...user, roles: editingUser.roles }
+                : user
             ),
           };
         }
@@ -109,16 +113,12 @@ export const useAdminUsersList = () => {
         url: API_REMOVE_ROLES_URL,
         method: "DELETE",
         body: {
-          userId : editingUser.id,
+          userId: editingUser.id,
           roleIds: roleIds.map((r) => r.id),
         },
       });
     },
-    onMutate: async ({
-      editingUser,
-    }: {
-      editingUser: UserList;
-    }) => {
+    onMutate: async ({ editingUser }: { editingUser: UserList }) => {
       await queryClient.cancelQueries({ queryKey: ["all-users-list"] });
 
       const previousUsers = queryClient.getQueryData(["all-users-list"]);
@@ -133,7 +133,9 @@ export const useAdminUsersList = () => {
             ...oldData,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             data: oldData.data.map((user: any) =>
-              user.id === editingUser.id ? { ...user, roles: editingUser.roles } : user
+              user.id === editingUser.id
+                ? { ...user, roles: editingUser.roles }
+                : user
             ),
           };
         }
@@ -150,18 +152,13 @@ export const useAdminUsersList = () => {
   });
 
   const toggleUserStatus = useMutation({
-    mutationFn: async ({
-    
-      id,
-    }:   { id: number },) => {
+    mutationFn: async ({ id }: { id: number }) => {
       return callApiWithAuth<any>({
         url: API_TOGGLE_USER_URL + id,
         method: "PUT",
       });
     },
-    onMutate: async ({
-      id,
-    }: { id: number }) => {
+    onMutate: async ({ id }: { id: number }) => {
       await queryClient.cancelQueries({ queryKey: ["all-users-list"] });
 
       const previousUsers = queryClient.getQueryData(["all-users-list"]);
@@ -193,5 +190,12 @@ export const useAdminUsersList = () => {
   });
 
   const users = usersResponse?.data || [];
-  return { users, isLoading, error, addNewRolesInUser, removeRolesInUser, toggleUserStatus };
+  return {
+    users,
+    isLoading,
+    error,
+    addNewRolesInUser,
+    removeRolesInUser,
+    toggleUserStatus,
+  };
 };

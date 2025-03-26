@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/context/AuthProvider";
+import { Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
@@ -104,8 +105,19 @@ export default function NewPassword() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full">
-                Reset Password
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={newPassword.isLoading}
+              >
+                {newPassword.isLoading ? (
+                  <>
+                    <Loader2 className="animate-spin mr-2" size={18} />{" "}
+                    Resetting...
+                  </>
+                ) : (
+                  "Reset Password"
+                )}
               </Button>
             </form>
           </Form>
@@ -122,4 +134,3 @@ export default function NewPassword() {
     </div>
   );
 }
-
