@@ -4,7 +4,6 @@ import { useAuthTokens } from "./authTokens";
 import { API_BASE_URL } from "@/constant";
 import { useNavigate } from "react-router-dom";
 import { CreateApiClient } from "@/service/api-client";
-import { useMemo } from "react";
 
 export interface Role {
   usersCount: number;
