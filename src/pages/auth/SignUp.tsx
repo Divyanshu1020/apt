@@ -41,10 +41,10 @@ export default function SignUp() {
 
   const form = useForm({
     defaultValues: {
-      name: "test",
-      email: "test8866@gmail.com",
-      password: "12345678",
-      confirmPassword: "12345678",
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
     },
   });
 
