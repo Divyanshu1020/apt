@@ -88,7 +88,7 @@ export const useAdminRolesList = () => {
       // Try with current access token
       try {
         const accessToken = localStorage.getItem("access-token");
-        const response = await fetch(`/api/v1/admin/roles/${newRole}`, {
+        const response = await fetch(`${API_BASE_URL}/v1/admin/roles/${newRole}`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -175,9 +175,9 @@ export const useAdminRolesList = () => {
     onSuccess: () => {
       toast.success("Role added successfully!");
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["all-roles-list"] });
-    },
+    // onSettled: () => {
+    //   queryClient.invalidateQueries({ queryKey: ["all-roles-list"] });
+    // },
   });
 
   // ✅ Delete Role
@@ -186,7 +186,7 @@ export const useAdminRolesList = () => {
       // Try with current access token
       try {
         const accessToken = localStorage.getItem("access-token");
-        const response = await fetch(`/api/v1/admin/roles/${roleId}`, {
+        const response = await fetch(`${API_BASE_URL}/v1/admin/roles/${roleId}`, {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
