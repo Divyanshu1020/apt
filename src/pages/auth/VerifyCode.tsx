@@ -11,12 +11,14 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from "@/component
 import {
   InputOTP,
   InputOTPGroup,
+  InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { useAuth } from "@/context/AuthProvider";
 import { useForm } from "react-hook-form";
 import { Link, useSearchParams } from "react-router-dom";
 import { Loader2 } from "lucide-react"; // Import loader icon
+import React from "react";
 
 export default function VerifyCode() {
   const { verifyCode } = useAuth();
@@ -53,7 +55,7 @@ export default function VerifyCode() {
             <CardHeader>
               <CardTitle>Verify Code</CardTitle>
               <CardDescription>
-                Enter the verification code sent to your mobile app
+                Enter 6 digit code from Aptamitra Authenticator App
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -66,9 +68,12 @@ export default function VerifyCode() {
                     <FormItem>
                       <FormControl>
                         <InputOTP maxLength={6} {...field}>
-                          <InputOTPGroup>
+                          <InputOTPGroup className="gap-[5px]">
                             {[...Array(6)].map((_, index) => (
-                              <InputOTPSlot key={index} index={index} />
+                              <React.Fragment key={index}>
+                                <InputOTPSlot index={index} className="border" />
+                                {index < 5 && <InputOTPSeparator />}
+                              </React.Fragment>
                             ))}
                           </InputOTPGroup>
                         </InputOTP>

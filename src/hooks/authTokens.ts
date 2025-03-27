@@ -1,9 +1,11 @@
 import { API_BASE_URL } from "@/constant";
+import { useAuth } from "@/context/AuthProvider";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 export function useAuthTokens(navigate?: (value: string) => void) {
   const queryClient = useQueryClient();
+  const { setUser } = useAuth();
 
   const renewAccessToken = useMutation({
     mutationFn: async () => {
@@ -45,6 +47,8 @@ export function useAuthTokens(navigate?: (value: string) => void) {
       localStorage.removeItem("user");
       localStorage.removeItem("access-token");
       localStorage.removeItem("refresh-token");
+
+      setUser(null)
 
       
       if (navigate) {

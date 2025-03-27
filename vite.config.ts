@@ -16,7 +16,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://16.171.14.210:8080',
+        target: 'https://aptamitra.zapto.org:8080',
         changeOrigin: true,
         secure: false,
       },

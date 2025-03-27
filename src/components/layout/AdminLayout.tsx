@@ -70,6 +70,8 @@ export default function AdminLayout() {
     </>
   );
 
+  
+
   return (
     <div className="min-h-screen bg-gray-50/90 dark:bg-gray-900/90">
       <div className="flex flex-col">

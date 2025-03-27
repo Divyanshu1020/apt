@@ -1,4 +1,5 @@
 import { API_BASE_URL } from "@/constant";
+import { Role } from "@/hooks/admin-roleslist";
 import { SignUpData } from "@/pages/auth/SignUp";
 import {
   UseMutateFunction,
@@ -25,6 +26,7 @@ export interface User {
 }
 interface AuthContextValue {
   user: any;
+  setUser: (user: any) => void;
   isAuthenticated: boolean;
   isLoading: boolean;
   signUp: {
@@ -49,7 +51,12 @@ interface AuthContextValue {
     error: Error | null;
   };
   verifyCode: {
-    mutate: UseMutateFunction<any, Error,  { email: string; otp: string }, unknown>;
+    mutate: UseMutateFunction<
+      any,
+      Error,
+      { email: string; otp: string },
+      unknown
+    >;
     isLoading: boolean;
     error: Error | null;
   };
@@ -109,7 +116,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       localStorage.setItem("user", JSON.stringify(data.user));
       setUser(data.user);
       toast.success("Account created successfully.");
-      navigate("/");
+      navigate("/auth/sign-in");
     },
     onError: (error) => {
       toast.error(error.message || "Sign-up failed.");
@@ -134,6 +141,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       renewAccessToken.mutate({
         refreshToken: data.data.temp_token,
       });
+
       toast.success("Signed in successfully.");
     },
     onError: (error) => {
@@ -154,14 +162,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const requestPasswordReset = useMutation({
     mutationFn: async ({ email }: { email: string }) => {
-      const response = await fetch(
-        `${API_BASE_URL}/v1/login-email-otp`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/v1/login-email-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
       if (!response.ok) throw new Error("Password reset failed");
       return response.json();
     },
@@ -175,7 +180,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   });
 
   const verifyCode = useMutation({
-    mutationFn: async ({ email,otp }: { email: string; otp: string }) => {
+    mutationFn: async ({ email, otp }: { email: string; otp: string }) => {
       localStorage.removeItem("reset_password_token");
       const response = await fetch(
         `${API_BASE_URL}/v1/forgot-password-verify-email-otp`,
@@ -186,7 +191,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       );
       if (!response.ok) {
-        const res = await response.json()
+        const res = await response.json();
         throw new Error(res.message);
       }
       return response.json();
@@ -194,7 +199,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     onSuccess: (data) => {
       toast.success("OTP verified successfully.");
       console.log("OTP verified successfully:", data);
-      localStorage.setItem("reset_password_token", data.data.reset_password_token);
+      localStorage.setItem(
+        "reset_password_token",
+        data.data.reset_password_token
+      );
       navigate("/auth/new-password");
     },
     onError: (error) => {
@@ -204,19 +212,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const newPassword = useMutation({
     mutationFn: async ({ newPassword }: { newPassword: string }) => {
-      const reset_password_token = localStorage.getItem("reset_password_token") || "";
+      const reset_password_token =
+        localStorage.getItem("reset_password_token") || "";
       const response = await fetch(
         `${API_BASE_URL}/v1/forgot-password-reset-password`,
         {
           method: "PUT",
-          headers: { 
+          headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${reset_password_token}`,
-           },
-          body: JSON.stringify({ 
-            password : newPassword,
-            reset_password_token
-           }),
+          },
+          body: JSON.stringify({
+            password: newPassword,
+            reset_password_token,
+          }),
         }
       );
       if (!response.ok) throw new Error("Password reset failed");
@@ -239,7 +248,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       toast.error(error.message || "Password reset failed.");
       localStorage.removeItem("reset_password_token");
       navigate("/auth/sign-in");
-
     },
   });
 
@@ -271,7 +279,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       setUser(data.data.user);
 
-      navigate("/");
+      const isAdmin = data.data.user?.roles?.some(
+        (role: Role) => role.name === "ROLE_ADMIN"
+      );
+
+      const redirectTo = isAdmin ? "/admin/dashboard" : "/";
+
+      navigate(redirectTo);
     },
     onError: () => {
       toast.error("Failed to get access token. Please try logging in again.");
@@ -279,14 +293,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     },
   });
 
-  
-
   const getToken = useCallback(() => localStorage.getItem("token"), []);
 
   return (
     <AuthContext.Provider
       value={{
         user,
+        setUser,
         isAuthenticated: !!user,
         isLoading,
         signUp: {
