@@ -16,20 +16,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { formatRoleName } from "@/helper";
 import { UserList } from "@/hooks/admin-userslist";
 import { format } from "date-fns";
 import { Check, MoreHorizontal, X } from "lucide-react";
 
 interface UserTableProps {
   users: UserList[];
-  onEditUser: (user: UserList) => void;
+  onEditUser?: (user: UserList) => void;
   onManageRoles: (user: UserList) => void;
   onToggleStatus: (userId: number) => void;
 }
 
 export function UserTable({
   users,
-  onEditUser,
+  // onEditUser,
   onManageRoles,
   onToggleStatus,
 }: UserTableProps) {
@@ -75,7 +76,7 @@ export function UserTable({
                   <div className="flex flex-wrap gap-1">
                     {user.roles.map((role, index) => (
                       <Badge key={index} variant="outline">
-                        {role.name}
+                        { formatRoleName(role.name)}
                       </Badge>
                     ))}
                   </div>
@@ -96,14 +97,14 @@ export function UserTable({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem onClick={() => onEditUser(user)}>
+                      {/* <DropdownMenuItem onClick={() => onEditUser(user)}>
                         Edit user
-                      </DropdownMenuItem>
+                      </DropdownMenuItem> */}
                       <DropdownMenuItem onClick={() => onManageRoles(user)}>
                         Manage roles
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => onToggleStatus(user.id)}>
+                      <DropdownMenuItem onClick={() => onToggleStatus(user.id)} className={`${user.enabled === true ? "text-red-600" : "text-green-600"}`} >
                         {user.enabled === true ? "Deactivate" : "Activate"}{" "}
                         user
                       </DropdownMenuItem>

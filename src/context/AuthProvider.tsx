@@ -1,5 +1,4 @@
 import { API_BASE_URL } from "@/constant";
-import { Role } from "@/hooks/admin-roleslist";
 import { SignUpData } from "@/pages/auth/SignUp";
 import {
   UseMutateFunction,
@@ -279,11 +278,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       setUser(data.data.user);
 
-      const isAdmin = data.data.user?.roles?.some(
-        (role: Role) => role.name === "ROLE_ADMIN"
-      );
-
-      const redirectTo = isAdmin ? "/admin/dashboard" : "/";
+      const userRoles = data.data.user?.roles || [];
+      const haveRoles = userRoles.length > 0;
+      const redirectTo = haveRoles ? "/auth/role-selection" : "/";
 
       navigate(redirectTo);
     },

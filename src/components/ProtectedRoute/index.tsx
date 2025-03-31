@@ -1,5 +1,4 @@
 import { useAuth } from "@/context/AuthProvider";
-import { Role } from "@/hooks/admin-roleslist";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 
 
@@ -9,24 +8,19 @@ type ProtectedRouteProps = {
 };
 
 export const AuthGuard = ({ children }: { children?: React.ReactNode }) => {
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const {isLoading, isAuthenticated } = useAuth();
   const location = useLocation();
   
   // Show loading while auth status is being determined
-  if (isLoading) {
-    return <div>Loading...</div>;
+  if (isLoading || isAuthenticated) {
+    if (location.pathname === "/auth/role-selection") {
+      return <Outlet />;
+    }
+
+    return <Navigate to="/auth/role-selection" state={{ from: location }} replace />;
   }
   
-  if (isAuthenticated) {
-    // Check if the user has admin role
-    const isAdmin = user?.roles?.some((role: Role) => role.name === "ROLE_ADMIN");
-    
-    const redirectTo = isAdmin ? "/admin/dashboard" : "/";
-    
-    return <Navigate to={redirectTo} state={{ from: location }} replace />;
-  }
   
-  // User is not authenticated, allow access to auth pages
   return children ? <>{children}</> : <Outlet />;
 };
 

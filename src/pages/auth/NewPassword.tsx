@@ -17,19 +17,21 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/context/AuthProvider";
-import { Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
 export default function NewPassword() {
+    const [showPassword, setShowPassword] = useState(false);
   const { newPassword } = useAuth();
   const form = useForm({
     defaultValues: {
       newPassword: "",
       confirmPassword: "",
     },
-    mode: "onBlur",
+    mode: "onChange",
   });
 
   const onSubmit = (data: { newPassword: string; confirmPassword: string }) => {
@@ -38,6 +40,10 @@ export default function NewPassword() {
       return;
     }
     newPassword.mutate({ newPassword: data.newPassword });
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   return (
@@ -58,8 +64,8 @@ export default function NewPassword() {
                 rules={{
                   required: "New password is required",
                   minLength: {
-                    value: 6,
-                    message: "Password must be at least 6 characters",
+                    value: 8,
+                    message: "Password must be at least 8 characters",
                   },
                   pattern: {
                     value:
@@ -72,11 +78,26 @@ export default function NewPassword() {
                   <FormItem>
                     <FormLabel>New Password</FormLabel>
                     <FormControl>
-                      <Input
-                        type="password"
-                        placeholder="Enter your new password"
-                        {...field}
-                      />
+                    <div className="relative">
+                          <Input
+                            type={showPassword ? "text" : "password"}
+                            placeholder="Enter your New password"
+                            {...field}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-1 top-1/2 -translate-y-1/2"
+                            onClick={togglePasswordVisibility}
+                          >
+                            {showPassword ? (
+                              <EyeOff className="h-4 w-4 text-gray-500" />
+                            ) : (
+                              <Eye className="h-4 w-4 text-gray-500" />
+                            )}
+                          </Button>
+                        </div>
                     </FormControl>
                     <FormMessage>{fieldState.error?.message}</FormMessage>
                   </FormItem>

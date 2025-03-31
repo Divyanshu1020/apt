@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { formatRoleName } from "@/helper";
 import { Role } from "@/hooks/admin-roleslist";
 import { UserList } from "@/hooks/admin-userslist";
 
@@ -55,7 +56,7 @@ export function ManageRolesDialog({
                   checked={user.roles.some(r => r.id === role.id)}
                   onCheckedChange={() => handleRoleToggle(role)}
                 />
-                <Label htmlFor={`role-${role.id}`}>{role.name}</Label>
+                <Label htmlFor={`role-${role.id}`}>{formatRoleName(role.name)}</Label>
               </div>
             ))}
           </div>

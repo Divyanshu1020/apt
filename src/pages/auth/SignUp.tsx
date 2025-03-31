@@ -7,19 +7,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Link } from "react-router-dom";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { SubmitHandler, useForm } from "react-hook-form";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "@/context/AuthProvider";
+import { Eye, EyeOff } from "lucide-react";
+import { useState } from "react";
+import { SubmitHandler, useForm } from "react-hook-form";
+import { Link } from "react-router-dom";
 
 type FormData = {
   name: string;
@@ -34,9 +35,8 @@ export type SignUpData = {
   password: string;
 };
 
-
 export default function SignUp() {
-
+  const [showPassword, setShowPassword] = useState(false);
   const { signUp } = useAuth();
 
   const form = useForm({
@@ -46,13 +46,17 @@ export default function SignUp() {
       password: "",
       confirmPassword: "",
     },
+    mode: "onChange",
   });
 
   const onSubmit: SubmitHandler<FormData> = (data) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { confirmPassword, ...signUpData } = data; 
+    const { confirmPassword, ...signUpData } = data;
     signUp.mutate(signUpData as SignUpData);
+  };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   return (
@@ -99,7 +103,11 @@ export default function SignUp() {
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="Enter your email" {...field} />
+                        <Input
+                          type="email"
+                          placeholder="Enter your email"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -115,20 +123,39 @@ export default function SignUp() {
                       value: 8,
                       message: "Password must be at least 8 characters",
                     },
+                    pattern: {
+                      value:
+                        /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{6,}$/,
+                      message:
+                        "Password must contain at least one lowercase letter, one uppercase letter, one number and one special character",
+                    },
                   }}
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Password</FormLabel>
                       <FormControl>
-                        <Input
-                          type="password"
-                          placeholder="Enter your password"
-                          {...field}
-                        />
+                        <div className="relative">
+                          <Input
+                            type={showPassword ? "text" : "password"}
+                            placeholder="Enter your password"
+                            {...field}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-1 top-1/2 -translate-y-1/2"
+                            onClick={togglePasswordVisibility}
+                          >
+                            {showPassword ? (
+                              <EyeOff className="h-4 w-4 text-gray-500" />
+                            ) : (
+                              <Eye className="h-4 w-4 text-gray-500" />
+                            )}
+                          </Button>
+                        </div>
                       </FormControl>
-                      <FormDescription>
-                        Password must be at least 8 characters
-                      </FormDescription>
+
                       <FormMessage />
                     </FormItem>
                   )}
@@ -140,7 +167,8 @@ export default function SignUp() {
                   rules={{
                     required: "Please confirm your password",
                     validate: (value) =>
-                      value === form.getValues("password") || "Passwords do not match",
+                      value === form.getValues("password") ||
+                      "Passwords do not match",
                   }}
                   render={({ field }) => (
                     <FormItem>
@@ -159,16 +187,19 @@ export default function SignUp() {
               </div>
             </CardContent>
             <CardFooter className="flex flex-col space-y-4">
-              <Button 
-                className="w-full" 
-                type="submit" 
+              <Button
+                className="w-full"
+                type="submit"
                 disabled={signUp.isLoading}
               >
                 {signUp.isLoading ? "Signing Up..." : "Sign Up"}
               </Button>
               <p className="text-sm text-gray-600">
                 Already have an account?{" "}
-                <Link to="/auth/sign-in" className="text-primary hover:underline">
+                <Link
+                  to="/auth/sign-in"
+                  className="text-primary hover:underline"
+                >
                   Sign in
                 </Link>
               </p>
