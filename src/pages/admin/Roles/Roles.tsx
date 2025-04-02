@@ -35,9 +35,11 @@ import {
 } from "@/components/ui/table";
 import { formatRoleName } from "@/helper";
 import { useAdminRolesList } from "@/hooks/admin-roleslist";
+import { useAdminRolesListCount } from "@/hooks/admin-roleslist-count";
 
 export default function Roles() {
   const { roles, addRole, deleteRole } = useAdminRolesList();
+  const {rolesUserCount} = useAdminRolesListCount();
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -171,7 +173,7 @@ export default function Roles() {
                           ))}
                         </div>
                       </TableCell> */}
-                      <TableCell>{role.usersCount || 0}</TableCell>
+                      <TableCell>{rolesUserCount[role.name] || 0}</TableCell>
                       <TableCell className="text-right">
                         <Button
                           onClick={() => handleDeleteRole(role)}
