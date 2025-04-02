@@ -297,45 +297,45 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     },
   });
 
-  const renewAccessToken = useMutation({
-    mutationFn: async ({ refreshToken }: { refreshToken: string }) => {
-      if (!refreshToken) {
-        throw new Error("No refresh token found");
-      }
+  // const renewAccessToken = useMutation({
+  //   mutationFn: async ({ refreshToken }: { refreshToken: string }) => {
+  //     if (!refreshToken) {
+  //       throw new Error("No refresh token found");
+  //     }
 
-      const response = await fetch(`${API_BASE_URL}/v1/renew-access-token`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          // "Authorization": `Bearer ${refreshToken}`
-        },
-        body: JSON.stringify({
-          refreshToken: refreshToken,
-        }),
-      });
+  //     const response = await fetch(`${API_BASE_URL}/v1/renew-access-token`, {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         // "Authorization": `Bearer ${refreshToken}`
+  //       },
+  //       body: JSON.stringify({
+  //         refreshToken: refreshToken,
+  //       }),
+  //     });
 
-      if (!response.ok) throw new Error("Failed to renew access token");
-      return response.json();
-    },
-    onSuccess: (data) => {
-      // Store the new access token
-      localStorage.setItem("access-token", data.data.accessToken);
-      localStorage.setItem("refresh-token", data.data.refreshToken);
-      localStorage.setItem("user", JSON.stringify(data.data.user));
+  //     if (!response.ok) throw new Error("Failed to renew access token");
+  //     return response.json();
+  //   },
+  //   onSuccess: (data) => {
+  //     // Store the new access token
+  //     localStorage.setItem("access-token", data.data.accessToken);
+  //     localStorage.setItem("refresh-token", data.data.refreshToken);
+  //     localStorage.setItem("user", JSON.stringify(data.data.user));
 
-      setUser(data.data.user);
+  //     setUser(data.data.user);
 
-      const userRoles = data.data.user?.roles || [];
-      const haveRoles = userRoles.length > 0;
-      const redirectTo = haveRoles ? "/auth/role-selection" : "/";
+  //     const userRoles = data.data.user?.roles || [];
+  //     const haveRoles = userRoles.length > 0;
+  //     const redirectTo = haveRoles ? "/auth/role-selection" : "/";
 
-      navigate(redirectTo);
-    },
-    onError: () => {
-      toast.error("Failed to get access token. Please try logging in again.");
-      navigate("/auth/sign-in");
-    },
-  });
+  //     navigate(redirectTo);
+  //   },
+  //   onError: () => {
+  //     toast.error("Failed to get access token. Please try logging in again.");
+  //     navigate("/auth/sign-in");
+  //   },
+  // });
 
   const getToken = useCallback(() => localStorage.getItem("token"), []);
 
