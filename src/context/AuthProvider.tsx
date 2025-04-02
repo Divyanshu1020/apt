@@ -49,7 +49,17 @@ interface AuthContextValue {
     isLoading: boolean;
     error: Error | null;
   };
-  verifyCode: {
+  verifyForgotPasswordCode: {
+    mutate: UseMutateFunction<
+      any,
+      Error,
+      { email: string; otp: string },
+      unknown
+    >;
+    isLoading: boolean;
+    error: Error | null;
+  };
+  verifySignInCode: {
     mutate: UseMutateFunction<
       any,
       Error,
@@ -132,16 +142,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (!response.ok) throw new Error("Invalid credentials");
       return response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: (data, { email }) => {
       localStorage.setItem("temp-token", data.data.temp_token);
-      localStorage.setItem("user", JSON.stringify(data.data.user || "No data"));
-      setUser(data.user);
-      // Call the renewAccessToken function after successful login
-      renewAccessToken.mutate({
-        refreshToken: data.data.temp_token,
-      });
+      
+      
+      navigate(`/auth/verify-code?email=${email}&codeType=verifySignIn`);
 
-      toast.success("Signed in successfully.");
     },
     onError: (error) => {
       toast.error(error.message || "Invalid credentials.");
@@ -178,7 +184,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     },
   });
 
-  const verifyCode = useMutation({
+  const verifyForgotPasswordCode = useMutation({
     mutationFn: async ({ email, otp }: { email: string; otp: string }) => {
       localStorage.removeItem("reset_password_token");
       const response = await fetch(
@@ -203,6 +209,47 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         data.data.reset_password_token
       );
       navigate("/auth/new-password");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Authentication failed.");
+    },
+  });
+
+  const verifySignInCode = useMutation({
+    mutationFn: async ({ email, otp }: { email: string; otp: string }) => {
+      const response = await fetch(
+        `${API_BASE_URL}/v1/authenticator-validate-code`,
+        {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("temp-token") || ""}`,
+          },
+          body: JSON.stringify({ email, code: otp }),
+
+        }
+      );
+      if (!response.ok) {
+        const res = await response.json();
+        throw new Error(res.message);
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast.success("Sign-in successful.");
+
+      // Store the new access token
+      localStorage.setItem("access-token", data.data.accessToken);
+      localStorage.setItem("refresh-token", data.data.refreshToken);
+      localStorage.setItem("user", JSON.stringify(data.data.user));
+
+      setUser(data.data.user);
+
+      const userRoles = data.data.user?.roles || [];
+      const haveRoles = userRoles.length > 0;
+      const redirectTo = haveRoles ? "/auth/role-selection" : "/";
+
+      navigate(redirectTo);
     },
     onError: (error) => {
       toast.error(error.message || "Authentication failed.");
@@ -315,10 +362,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           isLoading: requestPasswordReset.isPending,
           error: requestPasswordReset.error,
         },
-        verifyCode: {
-          mutate: verifyCode.mutate,
-          isLoading: verifyCode.isPending,
-          error: verifyCode.error,
+        verifyForgotPasswordCode: {
+          mutate: verifyForgotPasswordCode.mutate,
+          isLoading: verifyForgotPasswordCode.isPending,
+          error: verifyForgotPasswordCode.error,
+        },
+        verifySignInCode: {
+          mutate: verifySignInCode.mutate,
+          isLoading: verifySignInCode.isPending,
+          error: verifySignInCode.error,  
         },
         newPassword: {
           mutate: newPassword.mutate,

@@ -21,9 +21,10 @@ import { Loader2 } from "lucide-react"; // Import loader icon
 import React from "react";
 
 export default function VerifyCode() {
-  const { verifyCode } = useAuth();
+  const { verifyForgotPasswordCode, verifySignInCode } = useAuth();
   const [searchParams] = useSearchParams();
   const email = searchParams.get("email") || "";
+  const codeType = searchParams.get("codeType") || "";
   const form = useForm({
     defaultValues: {
       otp: "",
@@ -39,8 +40,17 @@ export default function VerifyCode() {
       });
       return;
     }
+
+    if(codeType === "resetPassword") {
+      verifyForgotPasswordCode.mutate({ otp: data.otp, email });
+      return;
+    }
+
+    if(codeType === "verifySignIn") {
+      verifySignInCode.mutate({ otp: data.otp, email });
+      return;
+    }
   
-    verifyCode.mutate({ otp: data.otp, email });
   };
 
   // const resend = () => {
@@ -88,9 +98,9 @@ export default function VerifyCode() {
               <Button
                 type="submit"
                 className="w-full flex items-center justify-center"
-                disabled={verifyCode.isLoading} // Disable button while loading
+                disabled={verifySignInCode.isLoading || verifyForgotPasswordCode.isLoading} // Disable button while loading
               >
-                {verifyCode.isLoading ? (
+                {verifySignInCode.isLoading || verifyForgotPasswordCode.isLoading ? (
                   <>
                     <Loader2 className="animate-spin mr-2" size={18} /> Verifying...
                   </>

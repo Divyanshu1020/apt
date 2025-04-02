@@ -32,7 +32,7 @@ export default function ForgetPassword() {
 
   const onSubmit = (data: { email: string }) => {
     // requestPasswordReset.mutate({ email: data.email });
-    navigate("/auth/verify-code?email=" + data.email);
+    navigate("/auth/verify-code?email=" + data.email + "&codeType=resetPassword");
   };
 
   return (
