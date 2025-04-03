@@ -23,14 +23,14 @@ import { Check, MoreHorizontal, X } from "lucide-react";
 
 interface UserTableProps {
   users: UserList[];
-  onEditUser?: (user: UserList) => void;
+  onEditUser: (user: UserList) => void;
   onManageRoles: (user: UserList) => void;
   onToggleStatus: (userId: number) => void;
 }
 
 export function UserTable({
   users,
-  // onEditUser,
+  onEditUser,
   onManageRoles,
   onToggleStatus,
 }: UserTableProps) {
@@ -97,9 +97,9 @@ export function UserTable({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      {/* <DropdownMenuItem onClick={() => onEditUser(user)}>
+                      <DropdownMenuItem onClick={() => onEditUser(user)}>
                         Edit user
-                      </DropdownMenuItem> */}
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => onManageRoles(user)}>
                         Manage roles
                       </DropdownMenuItem>

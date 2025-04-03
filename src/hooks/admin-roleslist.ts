@@ -4,6 +4,7 @@ import { useAuthTokens } from "./authTokens";
 import { API_BASE_URL } from "@/constant";
 import { useNavigate } from "react-router-dom";
 import { CreateApiClient } from "@/service/api-client";
+import { useCSRF } from "./csrf-token";
 
 export interface Role {
   usersCount: number;
@@ -19,6 +20,7 @@ const API_URL = `${API_BASE_URL}/v1/admin/roles`;
 export const useAdminRolesList = () => {
   const queryClient = useQueryClient();
   const { renewAccessToken } = useAuthTokens();
+    const { fetchCSRFToken } = useCSRF();
 
   const navigate = useNavigate(); 
   const { callApiWithAuth } = CreateApiClient(navigate);
@@ -87,13 +89,18 @@ export const useAdminRolesList = () => {
     mutationFn: async ({ newRole }: { newRole: string }) => {
       // Try with current access token
       try {
-        const accessToken = localStorage.getItem("access-token");
+        const csrfToken = await fetchCSRFToken(); 
+        if (!csrfToken) {
+          throw new Error("Failed to retrieve CSRF token");
+        }
+
         const response = await fetch(`${API_BASE_URL}/v1/admin/roles/${newRole}`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
+            "X-XSRF-TOKEN": csrfToken
           },
+          credentials: "include",
         });
 
         if (response.status === 401 || response.status === 403) {
@@ -107,13 +114,13 @@ export const useAdminRolesList = () => {
           }
 
           // Retry with new token
-          const newAccessToken = localStorage.getItem("access-token");
           const retryResponse = await fetch(`/api/v1/admin/roles/${newRole}`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${newAccessToken}`,
+              "X-XSRF-TOKEN": csrfToken
             },
+            credentials: "include",
           });
 
           
@@ -185,13 +192,19 @@ export const useAdminRolesList = () => {
     mutationFn: async ({ roleId }: { roleId: number }) => {
       // Try with current access token
       try {
-        const accessToken = localStorage.getItem("access-token");
+
+        const csrfToken = await fetchCSRFToken(); 
+        if (!csrfToken) {
+          throw new Error("Failed to retrieve CSRF token");
+        }
+
         const response = await fetch(`${API_BASE_URL}/v1/admin/roles/${roleId}`, {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
+            "X-XSRF-TOKEN": csrfToken
           },
+          credentials: "include",
         });
 
         if (response.status === 401 || response.status === 403) {
@@ -199,13 +212,13 @@ export const useAdminRolesList = () => {
           await renewAccessToken.mutateAsync();
 
           // Retry with new token
-          const newAccessToken = localStorage.getItem("access-token");
           const retryResponse = await fetch(`/api/v1/admin/roles/${roleId}`, {
             method: "DELETE",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${newAccessToken}`,
+              "X-XSRF-TOKEN": csrfToken
             },
+            credentials: "include",
           });
 
           if (!retryResponse.ok) {

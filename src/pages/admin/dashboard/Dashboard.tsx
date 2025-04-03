@@ -9,7 +9,7 @@ import { UserFilters } from "./components/UserFilters";
 import { UserTable } from "./components/UserTable";
 
 export default function Dashboard() {
-  const { users, isLoading, error, addNewRolesInUser, removeRolesInUser, toggleUserStatus } = useAdminUsersList();
+  const { users, isLoading, error, addNewRolesInUser, removeRolesInUser, toggleUserStatus, updateUser } = useAdminUsersList();
   const { roles } = useAdminRolesList();
 
   // const [users, setUsers] = useState(initialUsers);
@@ -44,14 +44,23 @@ export default function Dashboard() {
 
   const handleEditUser = (user: UserList) => {
     setEditingUser({ ...user });
+    setBeforeEditUser({ ...user });
     setIsEditDialogOpen(true);
   };
 
   const handleSaveUser = () => {
-    if (!editingUser) return;
-    // setUsers(users.map((user) => (user.id === editingUser.id ? editingUser : user)));
-    // updateUser.mutate({ id: editingUser.id, userData: editingUser });
-    toggleUserStatus.mutate({ id: editingUser.id });
+    if (!editingUser || !beforeEditUser) return;
+  
+  
+    // Remove password if it's the same as before
+    // if (editingUser.password === beforeEditUser.password) {
+    //   // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    //   const { password, ...rest } = editingUser; // Remove password
+    //   updateUser.mutate(rest);
+    // }
+  
+    // console.log("editingUser", editingUser);
+    updateUser.mutate(editingUser);
     setIsEditDialogOpen(false);
   };
 

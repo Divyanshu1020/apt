@@ -1,9 +1,9 @@
 import { API_BASE_URL } from "@/constant";
+import { useCSRF } from "@/hooks/csrf-token";
 import { SignUpData } from "@/pages/auth/SignUp";
 import {
   UseMutateFunction,
   useMutation,
-  useQueryClient,
 } from "@tanstack/react-query";
 import {
   createContext,
@@ -74,6 +74,11 @@ interface AuthContextValue {
     isLoading: boolean;
     error: Error | null;
   };
+  logout: {
+    mutate: UseMutateFunction<any, Error, void, unknown>;
+    isLoading: boolean;
+    error: Error | null;
+  };
   getToken: () => string | null;
 }
 
@@ -83,23 +88,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const { fetchCSRFToken } = useCSRF();
 
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
         const storedUser = localStorage.getItem("user");
-        const accessToken = localStorage.getItem("access-token");
-        const refreshToken = localStorage.getItem("refresh-token");
 
-        if (accessToken && refreshToken && storedUser) {
+        if (storedUser) {
           setUser(JSON.parse(storedUser));
         }
       } catch (error) {
         console.error("Auth status check failed:", error);
         localStorage.removeItem("user");
-        localStorage.removeItem("access-token");
-        localStorage.removeItem("refresh-token");
       } finally {
         setIsLoading(false);
       }
@@ -109,22 +110,36 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signUp = useMutation<any, Error, SignUpData>({
     mutationFn: async (userData) => {
-      const response = await fetch(`${API_BASE_URL}/v1/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userData),
-      });
-      if (!response.ok) {
-        const res = await response.json();
-        throw new Error(res.message);
+      try {
+        const csrfToken = await fetchCSRFToken(); 
+        if (!csrfToken) {
+          throw new Error("Failed to retrieve CSRF token");
+        }
+
+        console.log("csrfToken", csrfToken);
+
+        const response = await fetch(`${API_BASE_URL}/v1/register`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-XSRF-TOKEN": csrfToken,
+          },
+          body: JSON.stringify(userData),
+          credentials: "include",
+        });
+
+        if (!response.ok) {
+          const res = await response.json();
+          throw new Error(res.message);
+        }
+        return response.json();
+      } catch (error) {
+        console.error("Sign-up error:", error);
+        throw error;
       }
-      return response.json();
     },
     onSuccess: (data) => {
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-      setUser(data.user);
-      toast.success("Account created successfully.");
+      toast.success(data.message || "Sign-up successful.");
       navigate("/auth/sign-in");
     },
     onError: (error) => {
@@ -134,46 +149,100 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signIn = useMutation({
     mutationFn: async (credentials: { email: string; password: string }) => {
-      const response = await fetch(`${API_BASE_URL}/v1/login-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(credentials),
-      });
-      if (!response.ok) throw new Error("Invalid credentials");
-      return response.json();
-    },
-    onSuccess: (data, { email }) => {
-      localStorage.setItem("temp-token", data.data.temp_token);
-      
-      
-      navigate(`/auth/verify-code?email=${email}&codeType=verifySignIn`);
+      try {
+        const csrfToken = await fetchCSRFToken();
+        if (!csrfToken) {
+          throw new Error("Failed to retrieve CSRF token");
+        }
 
+        const response = await fetch(`${API_BASE_URL}/v1/login-password`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-XSRF-TOKEN": csrfToken,
+          },
+          body: JSON.stringify(credentials),
+          credentials: "include",
+        });
+
+        if (!response.ok) {
+          const res = await response.json();
+          throw new Error(res.message || "Invalid credentials");
+        }
+        return response.json();
+      } catch (error) {
+        console.error("Sign-in error:", error);
+        throw error;
+      }
+    },
+    onSuccess: (_, { email }) => {
+      navigate(`/auth/verify-code?email=${email}&codeType=verifySignIn`);
     },
     onError: (error) => {
       toast.error(error.message || "Invalid credentials.");
     },
   });
 
-  const signOut = useCallback(() => {
-    localStorage.removeItem("temp-token");
-    localStorage.removeItem("access-token");
-    localStorage.removeItem("refresh-token");
-    localStorage.removeItem("user");
-    setUser(null);
-    queryClient.invalidateQueries({ queryKey: ["user"] });
-    navigate("/auth/sign-in");
-    toast.success("Signed out successfully.");
-  }, [navigate, queryClient]);
+  const signOut = async () => {
+    try {
+      const csrfToken = await fetchCSRFToken();
+      if (!csrfToken) {
+        throw new Error("Failed to retrieve CSRF token");
+      }
+
+      const response = await fetch(`${API_BASE_URL}/v1/logout`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-XSRF-TOKEN": csrfToken,
+        },
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        const res = await response.json();
+        throw new Error(res.message || "Logout failed");
+      }
+
+
+
+      localStorage.removeItem("user");
+      setUser(null);
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast.error( "Logout failed.");
+    }
+  }
+
+
 
   const requestPasswordReset = useMutation({
     mutationFn: async ({ email }: { email: string }) => {
-      const response = await fetch(`${API_BASE_URL}/v1/login-email-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      if (!response.ok) throw new Error("Password reset failed");
-      return response.json();
+      try {
+        const csrfToken = await fetchCSRFToken();
+        if (!csrfToken) {
+          throw new Error("Failed to retrieve CSRF token");
+        }
+
+        const response = await fetch(`${API_BASE_URL}/v1/login-email-otp`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-XSRF-TOKEN": csrfToken,
+          },
+          body: JSON.stringify({ email }),
+          credentials: "include",
+        });
+
+        if (!response.ok) {
+          const res = await response.json();
+          throw new Error(res.message || "Password reset failed");
+        }
+        return response.json();
+      } catch (error) {
+        console.error("Password reset request error:", error);
+        throw error;
+      }
     },
     onSuccess: (_, { email }) => {
       toast.success("OTP has been sent to your email.");
@@ -186,28 +255,37 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const verifyForgotPasswordCode = useMutation({
     mutationFn: async ({ email, otp }: { email: string; otp: string }) => {
-      localStorage.removeItem("reset_password_token");
-      const response = await fetch(
-        `${API_BASE_URL}/v1/forgot-password-verify-email-otp`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, otp }),
+      try {
+        const csrfToken = await fetchCSRFToken(); // Get fresh CSRF token
+        if (!csrfToken) {
+          throw new Error("Failed to retrieve CSRF token");
         }
-      );
-      if (!response.ok) {
-        const res = await response.json();
-        throw new Error(res.message);
+
+        const response = await fetch(
+          `${API_BASE_URL}/v1/forgot-password-verify-email-otp`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-XSRF-TOKEN": csrfToken, 
+            },
+            body: JSON.stringify({ email, otp }),
+            credentials: "include", 
+          }
+        );
+
+        if (!response.ok) {
+          const res = await response.json();
+          throw new Error(res.message || "Authentication failed");
+        }
+        return response.statusText;
+      } catch (error) {
+        console.error("Verify forgot password code error:", error);
+        throw error;
       }
-      return response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       toast.success("OTP verified successfully.");
-      console.log("OTP verified successfully:", data);
-      localStorage.setItem(
-        "reset_password_token",
-        data.data.reset_password_token
-      );
       navigate("/auth/new-password");
     },
     onError: (error) => {
@@ -217,35 +295,46 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const verifySignInCode = useMutation({
     mutationFn: async ({ email, otp }: { email: string; otp: string }) => {
-      const response = await fetch(
-        `${API_BASE_URL}/v1/authenticator-validate-code`,
-        {
-          method: "POST",
-          headers: { 
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("temp-token") || ""}`,
-          },
-          body: JSON.stringify({ email, code: otp }),
-
+      try {
+        const csrfToken = await fetchCSRFToken();
+        if (!csrfToken) {
+          throw new Error("Failed to retrieve CSRF token");
         }
-      );
-      if (!response.ok) {
-        const res = await response.json();
-        throw new Error(res.message);
+
+        const response = await fetch(
+          `${API_BASE_URL}/v1/authenticator-validate-code`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-XSRF-TOKEN": csrfToken,
+              Authorization: `Bearer ${
+                localStorage.getItem("temp-token") || ""
+              }`,
+            },
+            body: JSON.stringify({ email, code: otp }),
+            credentials: "include",
+          }
+        );
+
+        if (!response.ok) {
+          const res = await response.json();
+          throw new Error(res.message || "Authentication failed");
+        }
+        return response.json();
+      } catch (error) {
+        console.error("Verify sign-in code error:", error);
+        throw error;
       }
-      return response.json();
     },
     onSuccess: (data) => {
       toast.success("Sign-in successful.");
 
-      // Store the new access token
-      localStorage.setItem("access-token", data.data.accessToken);
-      localStorage.setItem("refresh-token", data.data.refreshToken);
-      localStorage.setItem("user", JSON.stringify(data.data.user));
+      localStorage.setItem("user", JSON.stringify(data.data));
 
-      setUser(data.data.user);
+      setUser(data.data);
 
-      const userRoles = data.data.user?.roles || [];
+      const userRoles = data.data?.roles || [];
       const haveRoles = userRoles.length > 0;
       const redirectTo = haveRoles ? "/auth/role-selection" : "/";
 
@@ -258,44 +347,78 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const newPassword = useMutation({
     mutationFn: async ({ newPassword }: { newPassword: string }) => {
-      const reset_password_token =
-        localStorage.getItem("reset_password_token") || "";
-      const response = await fetch(
-        `${API_BASE_URL}/v1/forgot-password-reset-password`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${reset_password_token}`,
-          },
-          body: JSON.stringify({
-            password: newPassword,
-            reset_password_token,
-          }),
+      try {
+        
+
+        const csrfToken = await fetchCSRFToken();
+        if (!csrfToken) {
+          throw new Error("Failed to retrieve CSRF token");
         }
-      );
-      if (!response.ok) throw new Error("Password reset failed");
-      return response.json();
+
+        const response = await fetch(
+          `${API_BASE_URL}/v1/forgot-password-reset-password`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              "X-XSRF-TOKEN": csrfToken,
+            },
+            body: JSON.stringify({
+              password: newPassword,
+            }),
+            credentials: "include",
+          }
+        );
+
+        if (!response.ok) {
+          const res = await response.json();
+          throw new Error(res.message || "Password reset failed");
+        }
+        return response.json();
+      } catch (error) {
+        console.error("Password reset error:", error);
+        throw error;
+      }
     },
     onSuccess: (data) => {
       toast.success("Password reset successfully.");
 
-      localStorage.setItem("access-token", data.data.accessToken);
-      localStorage.setItem("refresh-token", data.data.refreshToken);
-      localStorage.setItem("user", JSON.stringify(data.data.user));
+      localStorage.setItem("user", JSON.stringify(data.data));
 
-      localStorage.removeItem("reset_password_token");
 
-      setUser(data.data.user);
-
+      setUser(data.data);
       navigate("/");
     },
     onError: (error) => {
       toast.error(error.message || "Password reset failed.");
-      localStorage.removeItem("reset_password_token");
       navigate("/auth/sign-in");
     },
   });
+
+  const logout = useMutation({
+    mutationFn: async () => {
+      try {
+        const csrfToken = await fetchCSRFToken();
+        if (!csrfToken) {
+          throw new Error("Failed to retrieve CSRF token");
+        }
+
+        const response = await fetch(`${API_BASE_URL}/v1/logout`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-XSRF-TOKEN": csrfToken,
+          },
+          credentials: "include",
+        });
+
+      console.log("response", response);
+      } catch (error) {
+        console.error("Logout error:", error);
+        toast.error( "Logout failed.");
+      }
+    }
+  })
 
   // const renewAccessToken = useMutation({
   //   mutationFn: async ({ refreshToken }: { refreshToken: string }) => {
@@ -370,12 +493,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         verifySignInCode: {
           mutate: verifySignInCode.mutate,
           isLoading: verifySignInCode.isPending,
-          error: verifySignInCode.error,  
+          error: verifySignInCode.error,
         },
         newPassword: {
           mutate: newPassword.mutate,
           isLoading: newPassword.isPending,
           error: newPassword.error,
+        },
+        logout : {
+          mutate: logout.mutate,
+          isLoading: logout.isPending,
+          error: logout.error
         },
         getToken,
       }}
