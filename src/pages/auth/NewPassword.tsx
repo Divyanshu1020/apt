@@ -25,6 +25,7 @@ import { toast } from "sonner";
 
 export default function NewPassword() {
     const [showPassword, setShowPassword] = useState(false);
+    const [confirmShowPassword, setConfirmShowPassword] = useState(false);
   const { newPassword } = useAuth();
   const form = useForm({
     defaultValues: {
@@ -44,6 +45,10 @@ export default function NewPassword() {
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
+  };
+
+  const toggleConfirmPasswordVisibility = () => {
+    setConfirmShowPassword(!confirmShowPassword);
   };
 
   return (
@@ -116,11 +121,26 @@ export default function NewPassword() {
                   <FormItem>
                     <FormLabel>Confirm Password</FormLabel>
                     <FormControl>
-                      <Input
-                        type="password"
-                        placeholder="Confirm your new password"
-                        {...field}
-                      />
+                        <div className="relative">
+                          <Input
+                            type={confirmShowPassword ? "text" : "password"}
+                            placeholder="Confirm your new password"
+                            {...field}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-1 top-1/2 -translate-y-1/2"
+                            onClick={toggleConfirmPasswordVisibility}
+                          >
+                            {confirmShowPassword ? (
+                              <EyeOff className="h-4 w-4 text-gray-500" />
+                            ) : (
+                              <Eye className="h-4 w-4 text-gray-500" />
+                            )}
+                          </Button>
+                        </div>
                     </FormControl>
                     <FormMessage>{fieldState.error?.message}</FormMessage>
                   </FormItem>

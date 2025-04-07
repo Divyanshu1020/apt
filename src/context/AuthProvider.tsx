@@ -381,13 +381,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     },
     onSuccess: (data) => {
-      toast.success("Password reset successfully.");
+      toast.success("Sign-in successful.");
 
       localStorage.setItem("user", JSON.stringify(data.data));
 
-
       setUser(data.data);
-      navigate("/");
+
+      const userRoles = data.data?.roles || [];
+      const haveRoles = userRoles.length > 0;
+      const redirectTo = haveRoles ? "/auth/role-selection" : "/";
+
+      navigate(redirectTo);
     },
     onError: (error) => {
       toast.error(error.message || "Password reset failed.");

@@ -53,6 +53,17 @@ export default function VerifyCode() {
   
   };
 
+  React.useEffect(() => {
+    if (verifyForgotPasswordCode.error || verifySignInCode.error) {
+      // const errorMessage = verifyForgotPasswordCode.error?.message || verifySignInCode.error?.message;
+      form.setValue("otp", "");
+      form.setError("otp", {
+        type: "manual",
+        message:  "Invalid code",
+      });
+    }
+  }, [form, verifyForgotPasswordCode.error, verifySignInCode.error]);
+
   // const resend = () => {
   //   requestPasswordReset.mutate({ email: email });
   // };
