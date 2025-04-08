@@ -37,6 +37,7 @@ export type SignUpData = {
 
 export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
+  const [confirmShowPassword, setShowConfirmPassword] = useState(false);
   const { signUp } = useAuth();
 
   const form = useForm({
@@ -57,6 +58,10 @@ export default function SignUp() {
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
+  };
+
+  const toggleConfirmPasswordVisibility = () => {
+    setShowConfirmPassword(!confirmShowPassword);
   };
 
   return (
@@ -174,11 +179,26 @@ export default function SignUp() {
                     <FormItem>
                       <FormLabel>Confirm Password</FormLabel>
                       <FormControl>
-                        <Input
-                          type="password"
-                          placeholder="Confirm your password"
-                          {...field}
-                        />
+                      <div className="relative">
+                          <Input
+                            type={confirmShowPassword ? "text" : "password"}
+                            placeholder="Confirm your new password"
+                            {...field}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-1 top-1/2 -translate-y-1/2"
+                            onClick={toggleConfirmPasswordVisibility}
+                          >
+                            {confirmShowPassword ? (
+                              <EyeOff className="h-4 w-4 text-gray-500" />
+                            ) : (
+                              <Eye className="h-4 w-4 text-gray-500" />
+                            )}
+                          </Button>
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
